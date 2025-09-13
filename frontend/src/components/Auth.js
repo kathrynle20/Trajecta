@@ -102,7 +102,7 @@ const Auth = ({ user, onLogin, onLogout }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    localStorage.clear();
     onLogout();
     if (window.google) {
       window.google.accounts.id.disableAutoSelect();

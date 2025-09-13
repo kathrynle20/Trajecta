@@ -1,0 +1,166 @@
+.interests-manager {
+  margin-top: 1rem;
+}
+
+.interests-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.interests-content.no-interests {
+  justify-content: center;
+}
+
+.interests-input-container {
+  position: relative;
+  margin-top: 1rem;
+}
+
+.interests-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.interests-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.interests-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.interest-option {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #495057;
+  transition: background-color 0.15s ease;
+}
+
+.interest-option:hover {
+  background-color: #f8f9fa;
+}
+
+.interest-option.custom-option {
+  color: #007bff;
+  font-weight: 500;
+  border-top: 1px solid #e9ecef;
+}
+
+.interest-option.custom-option:hover {
+  background-color: #e3f2fd;
+}
+
+.user-interests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-interest-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #adb5bd;
+  color: white;
+  border: none;
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.add-interest-btn:hover {
+  background: #868e96;
+  transform: scale(1.05);
+}
+
+.add-interest-btn:active {
+  transform: scale(0.95);
+}
+
+.interest-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.interest-tag:hover {
+  background: #0056b3;
+}
+
+.remove-interest {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 4px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.remove-interest:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Empty state styling */
+.interests-manager .section-content.empty-state {
+  margin-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .interests-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .interest-tag {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
