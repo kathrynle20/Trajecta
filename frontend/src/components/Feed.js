@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Feed.css';
 
-const Feed = ({ communityId, communityName }) => {
+const Feed = ({ communityId, communityName, onPostSelect }) => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -106,6 +106,12 @@ const Feed = ({ communityId, communityName }) => {
     ));
   };
 
+  const handleComment = (postId) => {
+    if (onPostSelect) {
+      onPostSelect(postId);
+    }
+  };
+
   if (loading) {
     return (
       <div className="feed-loading">
@@ -169,7 +175,10 @@ const Feed = ({ communityId, communityName }) => {
                 >
                   ❤️ {post.likes}
                 </button>
-                <button className="action-btn comment-btn">
+                <button 
+                  className="action-btn comment-btn"
+                  onClick={() => handleComment(post.id)}
+                >
                   💬 {post.comments}
                 </button>
                 <button className="action-btn share-btn">

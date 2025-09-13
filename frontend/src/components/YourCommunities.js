@@ -4,7 +4,7 @@ import './YourCommunities.css';
 const YourCommunities = ({ onCommunitySelect }) => {
     // TODO: Change tabs to pull from database of communities
   const [tabs, setTabs] = useState([
-    { id: 1, name: 'Personal', isActive: true, memberCount: 1250 },
+    { id: 1, name: 'Personal', isActive: true, memberCount: 1 },
     { id: 2, name: 'Tech Talk', isActive: false, memberCount: 890 },
     { id: 3, name: 'Study Groups', isActive: false, memberCount: 567 }
   ]);

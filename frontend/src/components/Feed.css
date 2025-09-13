@@ -13,8 +13,13 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 10;
 }
 
 .feed-header h3 {
@@ -188,6 +193,7 @@
   line-height: 1.6;
   margin: 0;
   font-size: 0.95rem;
+  text-align: left;
 }
 
 .post-actions {
