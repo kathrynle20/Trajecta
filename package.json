@@ -1,25 +1,13 @@
 {
-  "name": "trajecto",
+  "name": "Trajecta",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon ./bin/www",
-    "client": "cd frontend && npm start",
+    "start": "cd frontend && npm start",
     "build": "cd frontend && npm run build",
-    "build:watch": "cd frontend && npm run build -- --watch"
+    "install-frontend": "cd frontend && npm install",
+    "dev": "cd frontend && npm start"
   },
-  "dependencies": {
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "express": "~4.16.1",
-    "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
-    "cors": "^2.8.5"
-  },
-  "devDependencies": {
-    "concurrently": "^7.6.0",
-    "nodemon": "^2.0.20"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

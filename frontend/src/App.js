@@ -1,23 +1,56 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
+import Auth from './components/Auth';
 import './App.css';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="App">
+        <div className="loading-container">
+          <h2>Loading Trajecta...</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>Trajecta</h1>
+        <Auth />
       </header>
+      
+      {user && (
+        <main className="App-main">
+          <div className="dashboard">
+            <h2>Welcome to your Dashboard</h2>
+            <p>You are successfully authenticated with Google OAuth!</p>
+            <div className="dashboard-content">
+              <div className="card">
+                <h3>Your Profile</h3>
+                <p>Name: {user.name}</p>
+                <p>Email: {user.email}</p>
+              </div>
+              <div className="card">
+                <h3>Getting Started</h3>
+                <p>Your authentication is working! You can now build your application features.</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
     </div>
   );
 }

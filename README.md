@@ -1,4 +1,4 @@
-# Trajecto
+# Trajecta
 
 A Node.js Express web application with clear frontend/backend separation.
 
