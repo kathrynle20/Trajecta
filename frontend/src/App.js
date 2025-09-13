@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
-import Homepage from './pages/Homepage';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 // Header component that needs access to navigate
