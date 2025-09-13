@@ -15,6 +15,14 @@ function App() {
     setLoading(false);
   }, []);
 
+  const handleUserLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleUserLogout = () => {
+    setUser(null);
+  };
+
   if (loading) {
     return (
       <div className="App">
@@ -29,7 +37,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>Trajecta</h1>
-        <Auth />
+        <Auth user={user} onLogin={handleUserLogin} onLogout={handleUserLogout} />
       </header>
       
       {user && (

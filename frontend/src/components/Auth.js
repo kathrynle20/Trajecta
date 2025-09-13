@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Auth.css';
 
-const Auth = () => {
-  const [user, setUser] = useState(null);
+const Auth = ({ user, onLogin, onLogout }) => {
   const [loading, setLoading] = useState(true);
 
   const parseJwt = (token) => {
@@ -24,16 +23,11 @@ const Auth = () => {
       photo: userObject.picture
     };
     
-    setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
-  }, []);
+    onLogin(userData);
+  }, [onLogin]);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
     setLoading(false);
 
     // Wait for Google Identity Services to load
@@ -108,8 +102,8 @@ const Auth = () => {
   };
 
   const handleLogout = () => {
-    setUser(null);
     localStorage.removeItem('user');
+    onLogout();
     if (window.google) {
       window.google.accounts.id.disableAutoSelect();
     }
