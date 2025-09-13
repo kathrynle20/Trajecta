@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "build": "node ./scripts/build-frontend.js",
+    "build:watch": "nodemon --watch frontend/assets --exec \"npm run build\""
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
