@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
-import Dashboard from './components/Dashboard';
 import Homepage from './pages/Homepage';
 import './App.css';
 
@@ -57,7 +56,14 @@ function App() {
     setUser(null);
     localStorage.removeItem('user');
     // Clear any other user-related data from localStorage if needed
+<<<<<<< HEAD
     localStorage.clear(); 
+=======
+    localStorage.clear();
+    localStorage.removeItem('user');
+    // Clear any other user-related data from localStorage if needed
+    localStorage.clear();
+>>>>>>> 1f79462 (Started homepage)
   };
 
   if (loading) {
