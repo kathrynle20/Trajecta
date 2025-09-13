@@ -3,5 +3,24 @@ html
   head
     title= title
     link(rel='stylesheet', href='/stylesheets/style.css')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    script(src='/javascripts/navbar.js')
   body
-    block content
+    nav.navbar
+      .navbar-container
+        .navbar-brand
+          a(href='/') Trajecto
+        .navbar-menu
+          ul.navbar-nav
+            li.nav-item
+              a.nav-link(href='/') Home
+            li.nav-item
+              a.nav-link(href='/users') Users
+            li.nav-item
+              a.nav-link(href='/about') About
+        .navbar-toggle
+          span.bar
+          span.bar
+          span.bar
+    main.main-content
+      block content
