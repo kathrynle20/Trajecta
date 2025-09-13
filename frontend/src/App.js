@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
 import Dashboard from './components/Dashboard';
+import Homepage from './pages/Homepage';
 import './App.css';
 
 // Header component that needs access to navigate
