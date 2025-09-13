@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
+import Dashboard from './components/Dashboard';
 import Homepage from './pages/Homepage';
 import './App.css';
 
@@ -55,7 +57,7 @@ function App() {
     setUser(null);
     localStorage.removeItem('user');
     // Clear any other user-related data from localStorage if needed
-    localStorage.clear();
+    localStorage.clear(); 
   };
 
   if (loading) {
