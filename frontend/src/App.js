@@ -56,9 +56,6 @@ function App() {
     localStorage.removeItem('user');
     // Clear any other user-related data from localStorage if needed
     localStorage.clear();
-    localStorage.removeItem('user');
-    // Clear any other user-related data from localStorage if needed
-    localStorage.clear();
   };
 
   if (loading) {
