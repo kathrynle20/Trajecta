@@ -56,7 +56,7 @@ function App() {
     setUser(null);
     localStorage.removeItem('user');
     // Clear any other user-related data from localStorage if needed
-    localStorage.clear(); 
+    localStorage.clear();
   };
 
   if (loading) {
@@ -79,6 +79,7 @@ function App() {
             {user ? (
               <>
                 <Route path="/" element={<Homepage user={user} />} />
+                <Route path="/dashboard" element={<Dashboard user={user} />} />
                 <Route path="/profile" element={<Profile user={user} />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
