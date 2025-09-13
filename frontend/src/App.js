@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
-import Dashboard from './components/Dashboard';
 import Homepage from './pages/Homepage';
 import './App.css';
 
@@ -79,7 +78,6 @@ function App() {
             {user ? (
               <>
                 <Route path="/" element={<Homepage user={user} />} />
-                <Route path="/dashboard" element={<Dashboard user={user} />} />
                 <Route path="/profile" element={<Profile user={user} />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
