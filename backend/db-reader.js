@@ -85,5 +85,75 @@ async function readUsers() {
   }
 }
 
+async function readExperiences() {
+  const client = await pool.connect();
+  try {
+    console.log('Reading experiences table...');
+    
+    // Get all experiences
+    const result = await client.query(`
+      SELECT id, user_id, skill, years_of_experience
+      FROM user_experiences
+      ORDER BY user_id, skill;
+    `);
+    
+    console.log(`Found ${result.rows.length} experiences:`);
+    console.log('---');
+    
+    result.rows.forEach(row => {
+      console.log(`ID: ${row.id}`);
+      console.log(`User ID: ${row.user_id}`);
+      console.log(`Experience: ${row.skill}`);
+      console.log(`Years: ${row.years_of_experience}`);
+      console.log('---');
+    });
+    
+    return result.rows;
+  } catch (err) {
+    console.error('Error reading experiences:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function readExperiencesByUserId(userId) {
+  const client = await pool.connect();
+  try {
+    console.log(`Reading experiences for user ID: ${userId}`);
+    
+    const result = await client.query(`
+      SELECT id, user_id, skill, years_of_experience
+      FROM user_experiences
+      WHERE user_id = $1
+      ORDER BY skill;
+    `, [userId]);
+    
+    console.log(`Found ${result.rows.length} experiences for user ${userId}:`);
+    console.log('---');
+    
+    result.rows.forEach(row => {
+      console.log(`Skill: ${row.skill} (${row.years_of_experience} years)`);
+    });
+    
+    return result.rows;
+  } catch (err) {
+    console.error('Error reading user experiences:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+// Export functions for use in other modules
+module.exports = {
+  readUsers,
+  readExperiences,
+  readExperiencesByUserId
+};
+
 // Run the database reader
-readUsers().catch(console.error);
+if (require.main === module) {
+  readUsers().catch(console.error);
+  readExperiences().catch(console.error);
+}
