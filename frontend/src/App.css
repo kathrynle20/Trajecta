@@ -4,6 +4,14 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

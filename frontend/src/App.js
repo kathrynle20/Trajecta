@@ -1,6 +1,39 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Auth from './components/Auth';
+import Profile from './components/profile';
+import UserAvatar from './components/UserAvatar';
+import Dashboard from './components/Dashboard';
+import Homepage from './pages/Homepage';
 import './App.css';
+
+// Header component that needs access to navigate
+const AppHeader = ({ user, onLogin, onLogout }) => {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleDashboardClick = () => {
+    navigate('/');
+  };
+
+  return (
+    <header className="App-header">
+      <h1 onClick={handleDashboardClick} style={{cursor: 'pointer'}}>Trajecta</h1>
+      {user && (
+        <div className="header-avatar">
+          <UserAvatar 
+            user={user} 
+            onLogout={onLogout} 
+            onProfileClick={handleProfileClick}
+          />
+        </div>
+      )}
+    </header>
+  );
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -21,6 +54,9 @@ function App() {
 
   const handleUserLogout = () => {
     setUser(null);
+    localStorage.removeItem('user');
+    // Clear any other user-related data from localStorage if needed
+    localStorage.clear();
   };
 
   if (loading) {
@@ -34,32 +70,28 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Trajecta</h1>
-        <Auth user={user} onLogin={handleUserLogin} onLogout={handleUserLogout} />
-      </header>
-      
-      {user && (
+    <Router>
+      <div className="App">
+        <AppHeader user={user} onLogin={handleUserLogin} onLogout={handleUserLogout} />
+        
         <main className="App-main">
-          <div className="dashboard">
-            <h2>Welcome to your Dashboard</h2>
-            <p>You are successfully authenticated with Google OAuth!</p>
-            <div className="dashboard-content">
-              <div className="card">
-                <h3>Your Profile</h3>
-                <p>Name: {user.name}</p>
-                <p>Email: {user.email}</p>
-              </div>
-              <div className="card">
-                <h3>Getting Started</h3>
-                <p>Your authentication is working! You can now build your application features.</p>
-              </div>
-            </div>
-          </div>
+          <Routes>
+            {user ? (
+              <>
+                <Route path="/" element={<Homepage user={user} />} />
+                <Route path="/profile" element={<Profile user={user} />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            ) : (
+              <>
+                <Route path="/login" element={<div className="login-container"><Auth user={user} onLogin={handleUserLogin} onLogout={handleUserLogout} /></div>} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
+              </>
+            )}
+          </Routes>
         </main>
-      )}
-    </div>
+      </div>
+    </Router>
   );
 }
 
