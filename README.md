@@ -3,10 +3,13 @@
 A Node.js Express web application with clear frontend/backend separation.
 
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/86b7688e-958e-41e8-9606-4dfaf8f5f868" />
-
-
 ## Website Preview
+
+### AI-Generated Course Roadmap
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7288b72e-d395-444e-a83b-44c804a8980b" />
+
+### Personalized Questionnaire
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/86b7688e-958e-41e8-9606-4dfaf8f5f868" />
 
 ### Feed page
 <img width="988" height="714" alt="Screenshot 2025-09-14 at 11 37 54 AM" src="https://github.com/user-attachments/assets/b08fcd10-9af5-4956-84e9-16eadf2f1431" />
@@ -16,8 +19,6 @@ A Node.js Express web application with clear frontend/backend separation.
 
 ### User Profile
 <img width="677" height="597" alt="Screenshot 2025-09-14 at 11 43 30 AM" src="https://github.com/user-attachments/assets/031464ff-c9fc-4a97-a337-45e9575ba0aa" />
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7288b72e-d395-444e-a83b-44c804a8980b" />
 
 
 
