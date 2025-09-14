@@ -25,6 +25,23 @@ const Auth = ({ user, onLogin, onLogout }) => {
 
     console.log("USER DATA:", userData);
     
+    // Send user data to backend
+    fetch('http://localhost:3001/auth/set-user-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ user: userData })
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log('Backend response:', response);
+    })
+    .catch(error => {
+      console.error('Error sending user data to backend:', error);
+    });
+    
     localStorage.setItem('user', JSON.stringify(userData));
     onLogin(userData);
   }, [onLogin]);
