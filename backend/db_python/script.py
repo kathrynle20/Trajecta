@@ -4,8 +4,8 @@ import json
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
-# Load .env with utf-16 BOM aware
-load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-16')
+# Load .env file
+load_dotenv(dotenv_path='../../frontend/.env')
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
