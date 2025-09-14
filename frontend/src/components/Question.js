@@ -1,64 +1,323 @@
 import React, { useState } from 'react';
 
+const API_BASE = 'http://localhost:3001/exam';
+
+const KNOWN_TOPICS = new Set([
+  'math','cs','ai','ml','nlp','data','economics','history','languages','art',
+  'biology','robotics','algorithms','systems','web','physics','quantum','stats','education','design'
+]);
+
 const Question = () => {
-    const [question, setQuestion] = useState('');
-    const [response, setResponse] = useState(null);
-    const [loading, setLoading] = useState(false);
-    
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        
-        try {
-            const res = await fetch('http://localhost:3001/exam/run1', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({ question })
-            });
-            
-            const data = await res.json();
-            console.log(data);
-            setResponse(data);
-        } catch (error) {
-            console.error('Error:', error);
-            setResponse({ error: 'Failed to get response' });
-        } finally {
-            setLoading(false);
-        }
+  const [seedInterests, setSeedInterests] = useState('ml,data'); // optional hint
+  const [loading, setLoading] = useState(false);
+  const [questions, setQuestions] = useState([]); // array from AI
+  const [qMeta, setQMeta] = useState({ version: 'v1' });
+  const [answers, setAnswers] = useState({}); // { [id]: value }
+  const [verdict, setVerdict] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function fetchQuestions(e) {
+    e?.preventDefault?.();
+    setLoading(true); setError(null); setVerdict(null);
+    try {
+      const seed = {
+        interests_hint: seedInterests
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean),
+        language: 'English',
+        count_min: 4, count_max: 9
+      };
+      const res = await fetch(`${API_BASE}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ seed })
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      const out = data.output || {};
+      setQMeta({ version: out.version || 'v1' });
+      setQuestions(Array.isArray(out.questions) ? out.questions : []);
+      setAnswers({}); // reset
+    } catch (err) {
+      setError(`Failed to get questions: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Build the payload expected by /exam/verdict from generic AI questions
+  function buildVerdictPayload() {
+    // gather interests from any multi/single whose selected items are known topics OR marked topic_tag
+    const interests = new Set();
+    // basic fields
+    let goal = '';
+    let hours = '';
+    const self = { math: 0, programming: 0, study: 0 };
+    const quiz = { math: false, data: false, cs: false };
+
+    // simple helpers
+    const coerceInt = (v, def=0) => {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? Math.max(0, Math.min(4, n)) : def;
     };
-    
-    return (
-        <div style={{ fontFamily: 'sans-serif', margin: '2rem' }}>
-            <h1>Ask a Question</h1>
-            <form onSubmit={handleSubmit}>
-                <input 
-                    type="text" 
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="Enter your question"
-                    style={{ width: '300px', padding: '8px', marginRight: '10px' }}
-                />
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Asking...' : 'Ask'}
-                </button>
-            </form>
-            
-            {response && (
-                <div style={{ marginTop: '2rem' }}>
-                    <h2>Question</h2>
-                    <p>{response.input}</p>
-                    <h2>Answer</h2>
-                    {response.error ? (
-                        <p style={{ color: 'red' }}>Error: {response.error}</p>
-                    ) : (
-                        <pre style={{ whiteSpace: 'pre-wrap' }}>{response.output}</pre>
-                    )}
-                </div>
-            )}
+    const mapTopicTagToSelfKey = (tag='') => {
+      const t = tag.toLowerCase();
+      if (['cs','programming','web','systems','algorithms','robotics','quantum'].includes(t)) return 'programming';
+      if (['math','stats','physics','economics'].includes(t)) return 'math';
+      return 'study';
+    };
+
+    for (const q of questions) {
+      const { id, type, options = [], topic_tag = '' } = q || {};
+      const val = answers[id];
+
+      if (val == null) continue;
+
+      if (type === 'multi') {
+        // val = array of strings
+        const arr = Array.isArray(val) ? val : [val];
+        for (const v of arr) {
+          if (KNOWN_TOPICS.has(String(v).toLowerCase())) interests.add(String(v).toLowerCase());
+        }
+        // also accept topic_tag if provided and selected anything
+        if (arr.length && topic_tag && KNOWN_TOPICS.has(String(topic_tag).toLowerCase())) {
+          interests.add(String(topic_tag).toLowerCase());
+        }
+      } else if (type === 'single') {
+        const sval = String(val);
+        // crude detection of hours
+        if (/\b(h|hours)\b/i.test(q.prompt || '') || /<2h|2–4h|5–7h|8–12h|13\+h/.test(options.join(','))) {
+          hours = sval;
+        }
+        // crude detection of goal
+        if (/goal|objective|aim/i.test(q.prompt || '')) {
+          goal = sval;
+        }
+        // single topic selection may also be an interest
+        if (KNOWN_TOPICS.has(sval.toLowerCase())) interests.add(sval.toLowerCase());
+      } else if (type === 'scale') {
+        // val should be a number 0..4
+        const key = mapTopicTagToSelfKey(topic_tag);
+        self[key] = coerceInt(val, 0);
+      } else if (type === 'quiz') {
+        // val = selected option; mark correctness if equals q.correct
+        const correct = (q.correct || '').toString();
+        const isRight = String(val) === correct;
+        const k = (topic_tag || '').toLowerCase();
+        if (k === 'math') quiz.math = isRight;
+        else if (k === 'data' || k === 'stats') quiz.data = isRight;
+        else if (k === 'cs') quiz.cs = isRight;
+      } else if (type === 'short') {
+        // ignore for scoring; could be language/budget/etc.
+      }
+    }
+
+    const interestsArr = Array.from(interests);
+    return {
+      answers: {
+        interests: interestsArr,
+        top3: interestsArr.slice(0, 3),
+        goal,
+        hours,
+        self,
+        quiz
+      }
+    };
+  }
+
+  async function submitVerdict(e) {
+    e?.preventDefault?.();
+    setLoading(true); setError(null); setVerdict(null);
+    try {
+      const payload = buildVerdictPayload();
+      const res = await fetch(`${API_BASE}/verdict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setVerdict(data.output || data); // {summary, recommendations, rationales?}
+    } catch (err) {
+      setError(`Failed to get verdict: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // render helpers
+  const updateAnswer = (id, value, kind) => {
+    setAnswers(prev => {
+      const next = { ...prev };
+      if (kind === 'multi') {
+        const curr = new Set(Array.isArray(prev[id]) ? prev[id] : []);
+        if (curr.has(value)) curr.delete(value); else curr.add(value);
+        next[id] = Array.from(curr);
+      } else {
+        next[id] = value;
+      }
+      return next;
+    });
+  };
+
+  const renderQuestion = (q) => {
+    const { id, prompt, type, options = [], scale } = q;
+    const val = answers[id];
+
+    if (type === 'multi') {
+      return (
+        <div key={id} style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 600 }}>{prompt}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+            {options.map(opt => (
+              <label key={opt} style={{ border: '1px solid #ddd', padding: '4px 8px', borderRadius: 6 }}>
+                <input
+                  type="checkbox"
+                  checked={(Array.isArray(val) ? val : []).includes(opt)}
+                  onChange={() => updateAnswer(id, opt, 'multi')}
+                />{' '}
+                {opt}
+              </label>
+            ))}
+          </div>
         </div>
-    )
-}
+      );
+    }
+
+    if (type === 'single') {
+      return (
+        <div key={id} style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 600 }}>{prompt}</div>
+          <select
+            value={val || ''}
+            onChange={(e) => updateAnswer(id, e.target.value)}
+            style={{ padding: 6, marginTop: 6 }}
+          >
+            <option value="" disabled>Select…</option>
+            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+      );
+    }
+
+    if (type === 'scale') {
+      const [min=0, max=4, lmin='Low', lmax='High'] = Array.isArray(scale) ? scale : [0,4,'Low','High'];
+      return (
+        <div key={id} style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 600 }}>{prompt}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+            <span style={{ opacity: .7 }}>{lmin}</span>
+            <input
+              type="range" min={min} max={max} step={1}
+              value={val ?? Math.round((min+max)/2)}
+              onChange={(e) => updateAnswer(id, Number(e.target.value))}
+            />
+            <span style={{ opacity: .7 }}>{lmax}</span>
+            <span style={{ fontFamily: 'monospace' }}>{val ?? Math.round((min+max)/2)}</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'quiz') {
+      return (
+        <div key={id} style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 600 }}>{prompt}</div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+            {options.map(opt => (
+              <label key={opt} style={{ border: '1px solid #ddd', padding: '4px 8px', borderRadius: 6 }}>
+                <input
+                  type="radio" name={id} value={opt}
+                  checked={val === opt}
+                  onChange={() => updateAnswer(id, opt)}
+                />{' '}
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // short (free text)
+    return (
+      <div key={id} style={{ marginBottom: 14 }}>
+        <div style={{ fontWeight: 600 }}>{prompt}</div>
+        <input
+          type="text"
+          value={val || ''}
+          onChange={(e) => updateAnswer(id, e.target.value)}
+          placeholder="Type your answer"
+          style={{ width: 360, padding: 8, marginTop: 6 }}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ fontFamily: 'sans-serif', margin: '2rem', maxWidth: 800 }}>
+      <h1>Personalized Course Finder</h1>
+
+      <form onSubmit={fetchQuestions} style={{ marginBottom: 16 }}>
+        <label style={{ marginRight: 8 }}>Interests hint (optional):</label>
+        <input
+          type="text"
+          value={seedInterests}
+          onChange={(e) => setSeedInterests(e.target.value)}
+          placeholder="e.g. ml,data,cs"
+          style={{ width: 260, padding: 8, marginRight: 10 }}
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Generating…' : 'Generate Questions'}
+        </button>
+      </form>
+
+      {questions.length > 0 && (
+        <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, marginTop: 12 }}>
+          <h2 style={{ marginTop: 0 }}>Answer these</h2>
+          {questions.map(renderQuestion)}
+          <button onClick={submitVerdict} disabled={loading} style={{ marginTop: 8 }}>
+            {loading ? 'Submitting…' : 'Get Recommendations'}
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p style={{ color: 'red', marginTop: 16 }}>Error: {error}</p>
+      )}
+
+      {verdict && (
+        <div style={{ marginTop: 24 }}>
+          <h2>Recommendations</h2>
+          {verdict.summary && (
+            <div style={{ marginBottom: 12 }}>
+              <div><strong>Primary topics:</strong> {(verdict.summary.primary_topics || []).join(', ')}</div>
+              <div><strong>Study time:</strong> {verdict.summary.study_time}</div>
+              {verdict.summary.estimated_levels && (
+                <div>
+                  <strong>Estimated levels:</strong>{' '}
+                  <code>{JSON.stringify(verdict.summary.estimated_levels)}</code>
+                </div>
+              )}
+            </div>
+          )}
+          <ul>
+            {(verdict.recommendations || []).map(c => (
+              <li key={c.id} style={{ marginBottom: 8 }}>
+                <strong>{c.title}</strong> <small>({c.id})</small>
+                {verdict.rationales && verdict.rationales[c.id] && (
+                  <div style={{ opacity: .8 }}>{verdict.rationales[c.id]}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default Question;
