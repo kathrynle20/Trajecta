@@ -267,48 +267,231 @@ const Question = () => {
   };
 
   return (
-    <div style={{ fontFamily: 'sans-serif', margin: '2rem', maxWidth: 800 }}>
-      <h1>Personalized Course Finder</h1>
+    <div style={{ 
+      fontFamily: "'Inter', 'Segoe UI', 'Roboto', sans-serif",
+      margin: '1rem auto',
+      maxWidth: 1400,
+      padding: '0 20px',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      minHeight: '100vh',
+      color: '#ffffff'
+    }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '24px',
+        padding: '40px',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+        color: '#1a1a1a'
+      }}>
+        <h1 style={{
+          fontSize: '2.5rem',
+          fontWeight: '700',
+          margin: '0 0 2rem 0',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          textAlign: 'center'
+        }}>Personalized Course Finder</h1>
 
-      <form onSubmit={fetchQuestions} style={{ marginBottom: 16 }}>
-        <label style={{ marginRight: 8 }}>Interests hint (optional):</label>
+      <form onSubmit={fetchQuestions} style={{ 
+        marginBottom: 24, 
+        padding: 20, 
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+      }}>
+        <label style={{ 
+          marginRight: 12, 
+          fontWeight: '600', 
+          color: '#374151',
+          fontSize: '1.1rem'
+        }}>Interests hint (optional):</label>
         <input
           type="text"
           value={seedInterests}
           onChange={(e) => setSeedInterests(e.target.value)}
           placeholder="e.g. ml,data,cs"
-          style={{ width: 260, padding: 8, marginRight: 10 }}
+          style={{ 
+            width: 300, 
+            padding: '12px 16px', 
+            marginRight: 12,
+            borderRadius: '10px',
+            border: '2px solid #e5e7eb',
+            fontSize: '1rem',
+            transition: 'all 0.2s ease',
+            outline: 'none'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#667eea';
+            e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#e5e7eb';
+            e.target.style.boxShadow = 'none';
+          }}
         />
-        <button type="submit" disabled={loading}>
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{
+            padding: '12px 24px',
+            background: loading ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '10px',
+            fontSize: '1rem',
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.4)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!loading) {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+            }
+          }}
+        >
           {loading ? 'Generating…' : 'Generate Questions'}
         </button>
       </form>
 
       {questions.length > 0 && (
-        <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 16, marginTop: 12 }}>
-          <h2 style={{ marginTop: 0 }}>Answer these</h2>
+        <div style={{ 
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+          borderRadius: '20px', 
+          padding: '24px', 
+          marginTop: 20,
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)'
+        }}>
+          <h2 style={{ 
+            marginTop: 0, 
+            marginBottom: 20,
+            fontSize: '1.8rem',
+            fontWeight: '700',
+            color: '#1e40af',
+            textAlign: 'center'
+          }}>Assessment Questions</h2>
           {questions.map(renderQuestion)}
-          <button onClick={submitVerdict} disabled={loading} style={{ marginTop: 8 }}>
+          <button 
+            onClick={submitVerdict} 
+            disabled={loading} 
+            style={{ 
+              marginTop: 20,
+              padding: '14px 28px',
+              background: loading ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+              display: 'block',
+              margin: '20px auto 0',
+              minWidth: '200px'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+              }
+            }}
+          >
             {loading ? 'Submitting…' : 'Get Recommendations'}
           </button>
         </div>
       )}
 
       {error && (
-        <p style={{ color: 'red', marginTop: 16 }}>Error: {error}</p>
+        <div style={{ 
+          marginTop: 20, 
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+          borderRadius: '12px',
+          border: '1px solid #fca5a5',
+          color: '#dc2626',
+          fontWeight: '600'
+        }}>
+          ⚠️ Error: {error}
+        </div>
       )}
 
       {verdict && (
-        <div style={{ marginTop: 24 }}>
-          <h2>Recommendations</h2>
+        <div style={{ 
+          marginTop: 32,
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+          borderRadius: '20px',
+          padding: '24px',
+          border: '1px solid rgba(34, 197, 94, 0.2)',
+          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)'
+        }}>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            color: '#166534',
+            textAlign: 'center',
+            margin: '0 0 24px 0',
+            background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>Recommendations</h2>
           {verdict.summary && (
-            <div style={{ marginBottom: 12 }}>
-              <div><strong>Primary topics:</strong> {(verdict.summary.primary_topics || []).join(', ')}</div>
-              <div><strong>Study time:</strong> {verdict.summary.study_time}</div>
+            <div style={{ 
+              marginBottom: 20, 
+              padding: '20px',
+              background: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '12px',
+              border: '1px solid rgba(34, 197, 94, 0.3)'
+            }}>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                marginBottom: 8, 
+                color: '#374151',
+                fontWeight: '600'
+              }}>
+                <strong style={{ color: '#16a34a' }}>Primary topics:</strong> {(verdict.summary.primary_topics || []).join(', ')}
+              </div>
+              <div style={{ 
+                fontSize: '1.1rem', 
+                marginBottom: 8, 
+                color: '#374151',
+                fontWeight: '600'
+              }}>
+                <strong style={{ color: '#16a34a' }}>Study time:</strong> {verdict.summary.study_time}
+              </div>
               {verdict.summary.estimated_levels && (
-                <div>
-                  <strong>Estimated levels:</strong>{' '}
-                  <code>{JSON.stringify(verdict.summary.estimated_levels)}</code>
+                <div style={{ 
+                  fontSize: '1.1rem', 
+                  color: '#374151',
+                  fontWeight: '600'
+                }}>
+                  <strong style={{ color: '#16a34a' }}>Estimated levels:</strong>{' '}
+                  <code style={{ 
+                    background: '#f3f4f6', 
+                    padding: '4px 8px', 
+                    borderRadius: '4px',
+                    color: '#1f2937',
+                    fontSize: '0.9rem'
+                  }}>{JSON.stringify(verdict.summary.estimated_levels)}</code>
                 </div>
               )}
             </div>
@@ -360,16 +543,49 @@ const Question = () => {
               })}
             </div>
           )}
-          <ul>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+            gap: '16px',
+            marginTop: '20px'
+          }}>
             {(verdict.recommendations || []).map(c => (
-              <li key={c.id} style={{ marginBottom: 8 }}>
-                <strong>{c.title}</strong> <small>({c.id})</small>
+              <div key={c.id} style={{ 
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '12px',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.2s ease'
+              }}>
+                <div style={{ 
+                  fontSize: '1.1rem', 
+                  fontWeight: '700', 
+                  color: '#1f2937',
+                  marginBottom: '4px'
+                }}>
+                  {c.title}
+                </div>
+                <div style={{ 
+                  fontSize: '0.9rem', 
+                  color: '#6b7280',
+                  marginBottom: '8px'
+                }}>
+                  ({c.id})
+                </div>
                 {verdict.rationales && verdict.rationales[c.id] && (
-                  <div style={{ opacity: .8 }}>{verdict.rationales[c.id]}</div>
+                  <div style={{ 
+                    fontSize: '0.95rem',
+                    color: '#374151',
+                    lineHeight: '1.5',
+                    fontStyle: 'italic'
+                  }}>
+                    {verdict.rationales[c.id]}
+                  </div>
                 )}
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
 
           {/* Display Advisor Information */}
           {(verdict.advisor_description || verdict.conversation_transcript || verdict.skill_levels) && (
@@ -527,6 +743,7 @@ const Question = () => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };
