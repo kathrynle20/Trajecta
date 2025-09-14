@@ -14,39 +14,32 @@ CFG = dict(
     sslmode="require",
 )
 
-def read_users():
+def read_users_and_roadmaps():
     with psycopg.connect(**CFG) as conn, conn.cursor() as cur:
-        print("Available tables:")
-        cur.execute("""SELECT table_name FROM information_schema.tables
-                       WHERE table_schema='public' ORDER BY 1;""")
-        for (t,) in cur.fetchall(): print("-", t)
-        print("---\nUsers table data:")
-        cur.execute("SELECT * FROM users ORDER BY id;")
-        cols = [d[0] for d in cur.description]
-        rows = cur.fetchall()
-        if not rows: return print("No users found.")
-        for i, r in enumerate(rows, 1):
-            print(f"User {i}:"); [print(f"  {k}: {v}") for k, v in zip(cols, r)]; print("---")
+        # Load all users
+        cur.execute("SELECT id, email, name, interests FROM users ORDER BY created_at;")
+        users = cur.fetchall()
 
-def read_experiences():
-    with psycopg.connect(**CFG) as conn, conn.cursor() as cur:
-        cur.execute("""SELECT id, user_id, skill, years_of_experience
-                       FROM user_experiences ORDER BY user_id, skill;""")
-        rows = cur.fetchall()
-        print(f"Found {len(rows)} experiences:\n---")
-        for id_, uid, skill, yrs in rows:
-            print(f"ID:{id_}  User:{uid}  Skill:{skill}  Years:{yrs}\n---")
-        return rows
+        for uid, email, name, interests in users:
+            print(f"\nUser: {name or email}")
+            print(f"  Email: {email}")
+            print(f"  Interests: {interests}")
 
-def read_experiences_by_user_id(user_id):
-    with psycopg.connect(**CFG) as conn, conn.cursor() as cur:
-        cur.execute("""SELECT id, user_id, skill, years_of_experience
-                       FROM user_experiences WHERE user_id=%s ORDER BY skill;""", (user_id,))
-        rows = cur.fetchall()
-        print(f"Found {len(rows)} for user {user_id}:")
-        for _, _, skill, yrs in rows: print(f"{skill} ({yrs} years)")
-        return rows
+            # Fetch roadmap for this user
+            cur.execute("""
+                SELECT title, (data->>'level')::int AS level
+                FROM roadmap_nodes
+                WHERE user_id=%s
+                ORDER BY position;
+            """, (uid,))
+            roadmap = cur.fetchall()
+
+            if roadmap:
+                print("  Roadmap:")
+                for subject, level in roadmap:
+                    print(f"    - ({subject}, {level})")
+            else:
+                print("  Roadmap: [none]")
 
 if __name__ == "__main__":
-    read_users()
-    read_experiences()
+    read_users_and_roadmaps()
