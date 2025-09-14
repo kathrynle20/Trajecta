@@ -30,7 +30,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
 
   const handleAddExperience = (skill) => {
     const years_of_experience = parseInt(yearsInput) || 0;
-    if (years_of_experience > 0 && !userExperiences.some(exp => exp.skill === skill)) {
+    if (years_of_experience >= 0 && !userExperiences.some(exp => exp.skill === skill)) {
       const newExperience = { skill, years_of_experience };
       onExperiencesChange([...userExperiences, newExperience]);
     }
@@ -42,7 +42,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
   const handleAddCustomExperience = () => {
     const customSkill = topicSearchTerm.trim();
     const years_of_experience = parseInt(yearsInput) || 0;
-    if (customSkill && years_of_experience > 0 && !userExperiences.some(exp => exp.skill === customSkill)) {
+    if (customSkill && years_of_experience >= 0 && !userExperiences.some(exp => exp.skill === customSkill)) {
       const newExperience = { skill: customSkill, years_of_experience };
       onExperiencesChange([...userExperiences, newExperience]);
     }
@@ -61,8 +61,8 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
   };
 
   const saveEditedYears = (skill) => {
-    const newYears = parseInt(editYears) || 1;
-    if (newYears > 0) {
+    const newYears = parseInt(editYears) || 0;
+    if (newYears >= 0) {
       const updatedExperiences = userExperiences.map(exp => 
         exp.skill === skill ? { ...exp, years_of_experience: newYears } : exp
       );
@@ -89,7 +89,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const years = parseInt(yearsInput) || 0;
-      if (years > 0) {
+      if (years >= 0) {
         if (filteredTopics.length > 0) {
           handleAddExperience(filteredTopics[0]);
         } else if (topicSearchTerm.trim()) {
@@ -101,7 +101,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
 
   const canAddExperience = () => {
     const years = parseInt(yearsInput) || 0;
-    return topicSearchTerm.trim() && years > 0;
+    return topicSearchTerm.trim() && years >= 0;
   };
 
   return (
@@ -119,7 +119,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
                   onBlur={() => saveEditedYears(experience.skill)}
                   onKeyPress={(e) => handleEditKeyPress(e, experience.skill)}
                   className="edit-years-input"
-                  min="1"
+                  min="0"
                   max="50"
                   autoFocus
                 />
@@ -188,7 +188,7 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
             onChange={(e) => setYearsInput(e.target.value)}
             onKeyPress={handleKeyPress}
             className="years-input"
-            min="1"
+            min="0"
             max="50"
           />
           
