@@ -52,6 +52,10 @@ const userDb = {
       const result = await client.query(
         `INSERT INTO users (id, email, name, avatar_url, google_id, bio, created_at) 
          VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
+         ON CONFLICT (email) DO UPDATE SET
+         name = EXCLUDED.name,
+         avatar_url = EXCLUDED.avatar_url,
+         google_id = EXCLUDED.google_id
          RETURNING *`,
         [
           id,
@@ -74,29 +78,34 @@ const userDb = {
     let user = await this.findByGoogleId(profile.id);
     
     if (user) {
-      // Update user info in case it changed
-      const client = await pool.connect();
-      try {
-        const result = await client.query(
-          `UPDATE users 
-           SET email = $1, name = $2, avatar_url = $3, updated_at = NOW() 
-           WHERE google_id = $4 
-           RETURNING *`,
-          [
-            profile.emails[0].value,
-            profile.displayName, 
-            profile.photos[0].value,
-            profile.id
-          ]
-        );
-        return result.rows[0];
-      } finally {
-        client.release();
-      }
-    } else {
-      // Create new user
-      return await this.createFromGoogleProfile(profile);
+      console.log('User found by Google ID:', user.id);
+      return user;
     }
+    
+    // If not found by Google ID, try to find by email
+    const client = await pool.connect();
+    try {
+      const emailResult = await client.query(
+        'SELECT * FROM users WHERE email = $1',
+        [profile.emails[0].value]
+      );
+      
+      if (emailResult.rows.length > 0) {
+        // User exists with this email, update their Google ID
+        const updateResult = await client.query(
+          `UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *`,
+          [profile.id, profile.emails[0].value]
+        );
+        console.log('Updated existing user with Google ID:', updateResult.rows[0].id);
+        return updateResult.rows[0];
+      }
+    } finally {
+      client.release();
+    }
+    
+    // User doesn't exist, create new one
+    console.log('Creating new user for:', profile.emails[0].value);
+    return await this.createFromGoogleProfile(profile);
   },
 
   // Create community
@@ -174,15 +183,15 @@ const userDb = {
   // Create post for user
   async createPost(profile, forum, post) {
     // First try to find existing user by Google ID
-    let user = await this.findByGoogleId(profile.id);
+    let user = await this.findOrCreateFromGoogleProfile(profile);
     
     if (user) {
       const client = await pool.connect();
       try {
-        console.log("POST: ", post);
+        console.log("Creating post:", post, "for forum:", forum);
         const postResult = await client.query(
           `INSERT INTO posts (id, forum_id, user_id, title, content, is_public, upvotes, created_at)
-          VALUES ($1, $2, $3, $4, $5, true, 0, NOW())
+          VALUES ($1, $2, $3, $4, $5, true, 0, NOW()) RETURNING *
           `, 
           [
             uuidv4(),
@@ -192,10 +201,13 @@ const userDb = {
             post.content
           ]
         );
-        console.log(postResult);
+        console.log("Post created successfully:", postResult.rows[0]);
+        return postResult.rows[0];
       } finally {
         client.release();
       }
+    } else {
+      throw new Error('User not found');
     }
   },
 
@@ -203,16 +215,20 @@ const userDb = {
   async findPostsForCommunity(forum) {
     const client = await pool.connect();
     try {
+      console.log("Finding posts for forum:", forum);
       const postResult = await client.query(
-        `SELECT id, forum_id, user_id, title, content, is_public, upvotes, created_at
-        FROM posts
-        WHERE forum_id = $1
-        ORDER BY created_at DESC
+        `SELECT p.id, p.forum_id, p.user_id, p.title, p.content, p.is_public, p.upvotes, p.created_at,
+                u.name as author_name, u.avatar_url as author_avatar
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.forum_id = $1
+        ORDER BY p.created_at DESC
         `, 
         [
           forum
         ]
       );
+      console.log("Found posts:", postResult.rows.length);
       return postResult.rows;
     } finally {
       client.release();

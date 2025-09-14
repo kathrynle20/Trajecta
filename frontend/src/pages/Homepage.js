@@ -8,9 +8,9 @@ const Homepage = ({user}) => {
   // State management
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [selectedCommunityId, setSelectedCommunityId] = useState(1);
-  const [selectedCommunityName, setSelectedCommunityName] = useState('Personal');
-  const [selectedCommunityDescription, setSelectedCommunityDescription] = useState('Your personal space for thoughts and updates');
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [selectedCommunityName, setSelectedCommunityName] = useState('');
+  const [selectedCommunityDescription, setSelectedCommunityDescription] = useState('');
   const [currentView, setCurrentView] = useState('feed'); // 'feed' or 'postDetail'
   const [selectedPostId, setSelectedPostId] = useState(null);
 

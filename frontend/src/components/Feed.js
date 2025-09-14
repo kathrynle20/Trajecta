@@ -68,81 +68,105 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
     ]
   };
 
-  // useEffect(() => {
-  //   // Load posts for the current community
-  //   fetchPosts();
-  //   setLoading(true);
-  //   setTimeout(() => {
-  //     // setPosts(samplePosts[communityId] || []);
-  //     setLoading(false);
-  //   });
-  // }, [communityId]);
+  useEffect(() => {
+    // Load posts for the current community
+    if (communityId) {
+      fetchPosts();
+    }
+  }, [communityId]);
 
-  // const fetchPosts = () => {
-  //   try {
-  //     fetch('http://localhost:3001/feed-api/find-posts', {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         credentials: 'include',
-  //         body: JSON.stringify({ forum: communityId })
-  //       })
-  //       .then(res => res.json())
-  //       .then(response => {
-  //         console.log("FORUM ID:", communityId);
-  //         console.log(response);
-  //         if(response.success) {
-  //           const postsData = response.posts;
-  //           setPosts(postsData);
-  //         }
-  //       })
-  //       .catch(error => {
-  //         console.error('Error sending user data to backend:', error);
-  //       });
-  //   } catch (error) {
-  //       console.error('Error creating post for user:', error);
-  //   }
-  // }
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:3001/feed-api/find-posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ forum: communityId })
+      });
+      
+      const data = await response.json();
+      console.log("Posts response:", data);
+      
+      if (data.success) {
+        const postsData = data.posts.map(post => ({
+          id: post.id,
+          author: post.author_name || 'Anonymous',
+          avatar: post.author_avatar,
+          title: post.title,
+          content: post.content,
+          timestamp: new Date(post.created_at).toLocaleString(),
+          likes: post.upvotes || 0,
+          comments: 0, // TODO: Add comments count
+          isLiked: false
+        }));
+        setPosts(postsData);
+      } else {
+        console.error('Failed to fetch posts:', data.message);
+        setPosts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // const handleCreatePost = () => {
-  //   if (newPost.trim()) {
-  //     const post = {
-  //       id: Date.now(),
-  //       author: 'You',
-  //       avatar: '😊',
-  //       title: title,
-  //       content: newPost.trim(),
-  //       timestamp: 'Just now',
-  //       likes: 0,
-  //       comments: 0,
-  //       isLiked: false
-  //     };
+  const handleCreatePost = async () => {
+    if (!newPost.trim() || !title.trim()) {
+      alert('Please enter both title and content for your post.');
+      return;
+    }
 
-  //     try {
-  //       fetch('http://localhost:3001/feed-api/create-post', {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           },
-  //           credentials: 'include',
-  //           body: JSON.stringify({ user: user, forum: communityId, post: post })
-  //         })
-  //         .then(res => res.json())
-  //         .then(response => {
-  //           console.log(response);
-  //         })
-  //         .catch(error => {
-  //           console.error('Error sending user data to backend:', error);
-  //         });
-  //     } catch (error) {
-  //         console.error('Error creating post for user:', error);
-  //     }
+    if (!user || !user.id) {
+      alert('You must be logged in to create a post.');
+      return;
+    }
 
-  //     setNewPost('');
-  //     setShowCreatePost(false);
-  //   }
-  // };
+    if (!communityId) {
+      alert('Please select a community first.');
+      return;
+    }
+
+    console.log('Creating post for community ID:', communityId);
+    console.log('User:', user);
+
+    const post = {
+      title: title.trim(),
+      content: newPost.trim()
+    };
+
+    try {
+      const response = await fetch('http://localhost:3001/feed-api/create-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ user: user, forum: communityId, post: post })
+      });
+      
+      const data = await response.json();
+      console.log('Create post response:', data);
+      
+      if (data.success) {
+        // Clear form
+        setTitle('');
+        setNewPost('');
+        setShowCreatePost(false);
+        // Refresh posts
+        fetchPosts();
+      } else {
+        alert('Failed to create post: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Error creating post. Please try again.');
+    }
+  };
 
   const handleLikePost = (postId) => {
     setPosts(posts.map(post => 
@@ -201,10 +225,10 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
             onChange={(e) => setNewPost(e.target.value)}
             rows={3}
           />
-          {/* <div className="form-actions">
+          <div className="form-actions">
             <button onClick={handleCreatePost} className="post-btn">Post</button>
             <button onClick={() => setShowCreatePost(false)} className="cancel-btn">Cancel</button>
-          </div> */}
+          </div>
         </div>
       )}
 
@@ -218,7 +242,21 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
           posts.map(post => (
             <div key={post.id} className="post-item">
               <div className="post-header">
-                <div className="post-avatar">{post.avatar}</div>
+                <div className="post-avatar">
+                  {post.avatar ? (
+                    <img 
+                      src={post.avatar} 
+                      alt={`${post.author}'s avatar`}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="avatar-fallback" style={{display: post.avatar ? 'none' : 'flex'}}>
+                    👤
+                  </div>
+                </div>
                 <div className="post-meta">
                   <span className="post-author">{post.author}</span>
                   <span className="post-timestamp">{post.timestamp}</span>
@@ -227,24 +265,6 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
               
               <div className="post-content">
                 <p>{post.content}</p>
-              </div>
-              
-              <div className="post-actions">
-                <button 
-                  className={`action-btn like-btn ${post.isLiked ? 'liked' : ''}`}
-                  onClick={() => handleLikePost(post.id)}
-                >
-                  ❤️ {post.likes}
-                </button>
-                <button 
-                  className="action-btn comment-btn"
-                  onClick={() => handleComment(post.id)}
-                >
-                  💬 {post.comments}
-                </button>
-                <button className="action-btn share-btn">
-                  🔗 Share
-                </button>
               </div>
             </div>
           ))

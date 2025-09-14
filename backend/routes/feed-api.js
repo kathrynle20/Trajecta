@@ -100,11 +100,26 @@ router.post('/find-communities', async (req, res) => {
 router.post('/create-post', async (req, res) => {
   try {
     const { user, forum, post } = req.body;
+    console.log('Creating post:', { user, forum, post });
 
     if (!user || !user.id) {
       return res.status(400).json({
         success: false,
         message: 'User information is required'
+      });
+    }
+
+    if (!post || !post.title || !post.content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Post title and content are required'
+      });
+    }
+
+    if (!forum) {
+      return res.status(400).json({
+        success: false,
+        message: 'Forum ID is required'
       });
     }
 
@@ -115,9 +130,18 @@ router.post('/create-post', async (req, res) => {
       emails: [{ value: user.email }],
       photos: [{ value: user.photo }]
     };
+    console.log("create-post - user:", googleProfile);
+    console.log("create-post - forum:", forum);
+    console.log("create-post - post:", post);
     
     // Create post for user from database
-    const posts = await userDb.createPost(googleProfile, forum, post);
+    const createdPost = await userDb.createPost(googleProfile, forum, post);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Post created successfully',
+      post: createdPost
+    });
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({
@@ -128,13 +152,27 @@ router.post('/create-post', async (req, res) => {
   }
 });
 
-// POST endpoint to create post
+// POST endpoint to find posts
 router.post('/find-posts', async (req, res) => {
   try {
-    const { forum} = req.body;
+    const { forum } = req.body;
+    console.log('Finding posts for forum:', forum);
 
-    // Get post for community
+    if (!forum) {
+      return res.status(400).json({
+        success: false,
+        message: 'Forum ID is required'
+      });
+    }
+
+    // Get posts for community
     const posts = await userDb.findPostsForCommunity(forum);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Posts retrieved successfully',
+      posts: posts
+    });
   } catch (error) {
     console.error('Error finding posts:', error);
     res.status(500).json({

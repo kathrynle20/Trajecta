@@ -6,7 +6,6 @@ const Profile = ({ user }) => {
   const [userExperiences, setUserExperiences] = useState([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null); // 'success', 'error', or null
 
   // Load experiences from backend on component mount
   useEffect(() => {
@@ -22,8 +21,9 @@ const Profile = ({ user }) => {
         if (response.ok) {
           const data = await response.json();
           console.log("data:", data);
-          // Keep consistent format: skill and years_of_experience
+          // Convert from backend format (skill, years) to frontend format (topic, years)
           const formattedExperiences = data.experiences.map(exp => ({
+            id: exp.id,
             skill: exp.skill,
             years_of_experience: exp.years_of_experience
           }));
@@ -53,42 +53,34 @@ const Profile = ({ user }) => {
   // Save experiences to backend
   const handleSaveExperiences = async () => {
     setIsSaving(true);
-    setSaveStatus(null);
     try {
       console.log("user experiences:", userExperiences);
       const formattedExperiences = userExperiences.map(exp => ({
         id: user.id,
-        skill: exp.skill,
-        years_of_experience: exp.years_of_experience
+        skill: exp.topic,
+        years_of_experience: exp.years
       }));
       console.log("formatted experiences:", formattedExperiences);
 
-      const response = await fetch('http://localhost:3001/profile/set-user-experiences', {
+      fetch('http://localhost:3001/profile/set-user-experiences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({ experiences: formattedExperiences })
+      })
+      .then(res => res.json())
+      .then(response => {
+        console.log('Backend response:', response);
+      })
+      .catch(error => {
+        console.error('Error sending user experience data to backend:', error);
       });
-      
-      const result = await response.json();
-      
-      if (response.ok && result.success) {
-        console.log('Backend response:', result);
-        setHasUnsavedChanges(false);
-        setSaveStatus('success');
-        // Clear success message after 3 seconds
-        setTimeout(() => setSaveStatus(null), 3000);
-      } else {
-        throw new Error(result.message || 'Failed to save changes');
-      }
 
     } catch (error) {
       console.error('Error saving experiences:', error);
-      setSaveStatus('error');
-      // Clear error message after 5 seconds
-      setTimeout(() => setSaveStatus(null), 5000);
+      alert('Error saving interests. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -105,6 +97,15 @@ const Profile = ({ user }) => {
       <div className="profile-section">
         <div className="section-header">
           <h2 className="section-title">Interests</h2>
+          {hasUnsavedChanges && (
+            <button 
+              className="save-button"
+              onClick={handleSaveExperiences}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
         </div>
         {userExperiences.length === 0 && (
           <p className="section-content empty-state">No interests added yet</p>
@@ -118,28 +119,6 @@ const Profile = ({ user }) => {
       <div className="profile-section">
         <h2 className="section-title">Communities</h2>
         <p className="section-content empty-state">No communities joined yet</p>
-      </div>
-      
-      {/* Save Button at Bottom */}
-      <div className="profile-actions">
-        <button 
-          className={`save-button-bottom ${hasUnsavedChanges ? 'highlighted' : 'unhighlighted'}`}
-          onClick={handleSaveExperiences}
-          disabled={isSaving || !hasUnsavedChanges}
-        >
-          {isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save Changes' : 'All Changes Saved'}
-        </button>
-        
-        {/* Status Message */}
-        {saveStatus && (
-          <div className={`status-message ${saveStatus}`}>
-            {saveStatus === 'success' ? (
-              <span>✓ Changes saved successfully!</span>
-            ) : (
-              <span>✗ Error saving changes. Please try again.</span>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
