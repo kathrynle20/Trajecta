@@ -16,22 +16,22 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
   useEffect(() => {
     if (topicSearchTerm.trim() === '') {
       setFilteredTopics(PREDEFINED_TOPICS.filter(topic => 
-        !userExperiences.some(exp => exp.topic === topic)
+        !userExperiences.some(exp => exp.skill === topic)
       ));
     } else {
       setFilteredTopics(
         PREDEFINED_TOPICS.filter(topic => 
           topic.toLowerCase().includes(topicSearchTerm.toLowerCase()) &&
-          !userExperiences.some(exp => exp.topic === topic)
+          !userExperiences.some(exp => exp.skill === topic)
         )
       );
     }
   }, [topicSearchTerm, userExperiences]);
 
-  const handleAddExperience = (topic) => {
-    const years = parseInt(yearsInput) || 0;
-    if (years > 0 && !userExperiences.some(exp => exp.topic === topic)) {
-      const newExperience = { topic, years };
+  const handleAddExperience = (skill) => {
+    const years_of_experience = parseInt(yearsInput) || 0;
+    if (years_of_experience > 0 && !userExperiences.some(exp => exp.skill === skill)) {
+      const newExperience = { skill, years_of_experience };
       onExperiencesChange([...userExperiences, newExperience]);
     }
     setTopicSearchTerm('');
@@ -40,10 +40,10 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
   };
 
   const handleAddCustomExperience = () => {
-    const customTopic = topicSearchTerm.trim();
-    const years = parseInt(yearsInput) || 0;
-    if (customTopic && years > 0 && !userExperiences.some(exp => exp.topic === customTopic)) {
-      const newExperience = { topic: customTopic, years };
+    const customSkill = topicSearchTerm.trim();
+    const years_of_experience = parseInt(yearsInput) || 0;
+    if (customSkill && years_of_experience > 0 && !userExperiences.some(exp => exp.skill === customSkill)) {
+      const newExperience = { skill: customSkill, years_of_experience };
       onExperiencesChange([...userExperiences, newExperience]);
     }
     setTopicSearchTerm('');
@@ -52,19 +52,19 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
   };
 
   const handleRemoveExperience = (experienceToRemove) => {
-    onExperiencesChange(userExperiences.filter(exp => exp.topic !== experienceToRemove.topic));
+    onExperiencesChange(userExperiences.filter(exp => exp.skill !== experienceToRemove.skill));
   };
 
   const startEditingYears = (experience) => {
-    setEditingExperience(experience.topic);
-    setEditYears(experience.years.toString());
+    setEditingExperience(experience.skill);
+    setEditYears(experience.years_of_experience.toString());
   };
 
-  const saveEditedYears = (topic) => {
+  const saveEditedYears = (skill) => {
     const newYears = parseInt(editYears) || 1;
     if (newYears > 0) {
       const updatedExperiences = userExperiences.map(exp => 
-        exp.topic === topic ? { ...exp, years: newYears } : exp
+        exp.skill === skill ? { ...exp, years_of_experience: newYears } : exp
       );
       onExperiencesChange(updatedExperiences);
     }
@@ -77,9 +77,9 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
     setEditYears('');
   };
 
-  const handleEditKeyPress = (e, topic) => {
+  const handleEditKeyPress = (e, skill) => {
     if (e.key === 'Enter') {
-      saveEditedYears(topic);
+      saveEditedYears(skill);
     } else if (e.key === 'Escape') {
       cancelEditingYears();
     }
@@ -109,15 +109,15 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
       {userExperiences.length > 0 && (
         <div className="user-experiences">
           {userExperiences.map((experience) => (
-            <span key={experience.topic} className="experience-tag">
-              <span className="experience-topic">{experience.topic}</span>
-              {editingExperience === experience.topic ? (
+            <span key={experience.skill} className="experience-tag">
+              <span className="experience-topic">{experience.skill}</span>
+              {editingExperience === experience.skill ? (
                 <input
                   type="number"
                   value={editYears}
                   onChange={(e) => setEditYears(e.target.value)}
-                  onBlur={() => saveEditedYears(experience.topic)}
-                  onKeyPress={(e) => handleEditKeyPress(e, experience.topic)}
+                  onBlur={() => saveEditedYears(experience.skill)}
+                  onKeyPress={(e) => handleEditKeyPress(e, experience.skill)}
                   className="edit-years-input"
                   min="1"
                   max="50"
@@ -129,13 +129,13 @@ const ExperiencesManager = ({ userExperiences = [], onExperiencesChange }) => {
                   onClick={() => startEditingYears(experience)}
                   title="Click to edit years"
                 >
-                  {experience.years} year{experience.years !== 1 ? 's' : ''}
+                  {experience.years_of_experience} year{experience.years_of_experience !== 1 ? 's' : ''}
                 </span>
               )}
               <button
                 className="remove-experience"
                 onClick={() => handleRemoveExperience(experience)}
-                aria-label={`Remove ${experience.topic}`}
+                aria-label={`Remove ${experience.skill}`}
               >
                 ×
               </button>

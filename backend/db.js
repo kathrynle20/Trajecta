@@ -214,15 +214,34 @@ const userExperiencesDb = {
   async addExperiences(experiences) {
     const client = await pool.connect();
     try {
-      for (const experience of experiences) {
-        // Convert string to UUID using PostgreSQL cast
-        await client.query(
-          `INSERT INTO user_experiences (id, skill, years_of_experience)
-           VALUES ($1::uuid, $2, $3::integer)
-           RETURNING *`,
-          [experience.id, experience.skill, experience.years_of_experience]
-        );
-      }
+      const id = experiences[0].id;
+      const skills = experiences.map(experience => experience.skill);
+      const years = experiences.map(experience => experience.years_of_experience);
+      
+      // Convert string to UUID using PostgreSQL cast
+      await client.query('DELETE FROM user_experiences WHERE id = $1::uuid',
+        [id]);
+      await client.query(
+        `INSERT INTO user_experiences (id, skill, years_of_experience)
+          VALUES ($1::uuid, $2, $3)
+          RETURNING *`,
+        [id, skills, years]
+      );
+      
+    } finally {
+      client.release();
+    }
+  },
+
+  async findExperiencesById(id) {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM user_experiences WHERE id = $1',
+        [id]
+      );
+      console.log("result:", result);
+      return result.rows[0] || null;
     } finally {
       client.release();
     }
