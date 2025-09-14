@@ -14,8 +14,6 @@ var authRouter = require('./routes/auth');
 var feedApiRouter = require('./routes/feed-api');
 var profileRouter = require('./routes/profile');
 
-var profileRouter = require('./routes/profile');
-
 // Import passport configuration
 require('./config/passport');
 
