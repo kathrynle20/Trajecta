@@ -11,15 +11,9 @@ require('dotenv').config({ path: '../frontend/.env' });
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
-<<<<<<< HEAD
 var feedApiRouter = require('./routes/feed-api');
+
 var profileRouter = require('./routes/profile');
-var feedApiRouter = require('./routes/feed-api');
-var profileRouter = require('./routes/profile');
-var feedApiRouter = require('./routes/feed-api');
-=======
-var profileRouter = require('./routes/profile');
->>>>>>> d87e56c (adding experiences)
 
 // Import passport configuration
 require('./config/passport');
@@ -62,15 +56,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
-<<<<<<< HEAD
 app.use('/feed-api', feedApiRouter);
 app.use('/profile', profileRouter);
-app.use('/feed-api', feedApiRouter);
-app.use('/profile', profileRouter);
-app.use('/feed-api', feedApiRouter);
-=======
-app.use('/profile', profileRouter);
->>>>>>> d87e56c (adding experiences)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
