@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import InterestsManager from './InterestsManager';
 import ExperiencesManager from './ExperiencesManager';
-import './Profile.css';
+import './profile.css';
 
 const Profile = ({ user }) => {
   const [userInterests, setUserInterests] = useState([]);
