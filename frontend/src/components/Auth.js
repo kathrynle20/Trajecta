@@ -22,6 +22,8 @@ const Auth = ({ user, onLogin, onLogout }) => {
       email: userObject.email,
       photo: userObject.picture
     };
+
+    console.log("USER DATA:", userData);
     
     localStorage.setItem('user', JSON.stringify(userData));
     onLogin(userData);
