@@ -12,11 +12,17 @@ router.get('/google',
 // Google auth callback
 router.get('/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login' }),
-    (req, res) => {
+  (req, res) => {
+    console.log("GOOGLE AUTH CALLBACK");
         // Successful authentication, redirect to dashboard or home
-        res.redirect('/dashboard');
+        res.redirect('http://localhost:3000/');
     }
 );
+
+router.post('/set-user-data', (req, res) => {
+  const { user } = req.body;
+  console.log("user backend:", user);
+})
 
 // Logout user
 router.get('/logout', (req, res) => {

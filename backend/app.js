@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
+const cors = require('cors');
+
 require('dotenv').config({ path: '../frontend/.env' });
 
 var indexRouter = require('./routes/index');
@@ -14,6 +16,12 @@ var authRouter = require('./routes/auth');
 require('./config/passport');
 
 var app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: true, // Allow requests from your React app
+  credentials: true // Allow cookies/sessions to be sent
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
