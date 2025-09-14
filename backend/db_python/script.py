@@ -220,10 +220,17 @@ def make_verdict(payload: dict) -> dict:
     scored.sort(key=lambda x: x[0], reverse=True)
     picks = [c for _,c in scored[:5]]
 
+    # Use original seed interests for topic-specific generation
+    seed_interests_raw = payload.get("seed_interests", "")
+    seed_interests_list = [s.strip() for s in seed_interests_raw.split(",") if s.strip()] if seed_interests_raw else []
+    
+    # Determine the primary topic from seed interests or inferred interests
+    primary_topic = seed_interests_list[0] if seed_interests_list else (interests[0] if interests else "artificial intelligence")
+    
     # Generate personalized advisor pack based on user interests
     advisor_seed = {
-        "topic": interests[0] if interests else "artificial intelligence",
-        "interests_hint": interests,
+        "topic": primary_topic,
+        "interests_hint": seed_interests_list if seed_interests_list else interests,
         "goal": goal or "build expertise in the chosen field",
         "role": "student",
         "gaps": ["mathematics", "statistics"] if "math" not in interests else ["programming", "data analysis"],
@@ -516,44 +523,45 @@ def generate_advisor_pack(seed: dict) -> dict:
     if USE_LLM:
         try:
             client = _anthropic_client()
-            prompt = {
-                "instructions": (
-                    "Return STRICT JSON with keys advisor_description, conversation_transcript, skill_levels. "
-                    "No prose around it; minified or compact JSON is fine."
-                ),
-                "constraints": {
-                    "language": language,
-                    "advisor_description": "3-6 sentences; third-person; concise; neutral; no bullet points.",
-                    "conversation_transcript": {
-                        "format": 'Multi-line string with alternating lines starting with "Advisor:" and "Student:".',
-                        "turns": transcript_turns
-                    },
-                    "skill_levels": {
-                        "items": [["Mathematics","{Beginner|Intermediate|Advanced}"],
-                                  ["Programming","{Beginner|Intermediate|Advanced}"],
-                                  ["Statistics","{Beginner|Intermediate|Advanced}"],
-                                  ["Machine Learning","{Beginner|Intermediate|Advanced}"]]
-                    }
-                },
-                "seed": {
-                    "topic": topic,
-                    "interests": interests,
-                    "current_role": role,
-                    "goal": goal,
-                    "gaps": gaps,
-                    "levels": levels
-                },
-                "style": {
-                    "tone": "supportive, academic, specific",
-                    "avoid": ["emojis","lists","markdown headings","overly long sentences"]
-                }
-            }
-            user_prompt = (
-                "Generate an advisor pack in the requested format using this input:\n" +
-                json.dumps(prompt, ensure_ascii=False)
-            )
+            
+            # Create highly specific prompt based on the topic
+            topic_specific_prompt = f"""
+You are creating a personalized academic advisor profile for a student interested in {topic}.
+
+Generate STRICT JSON with exactly these keys: advisor_description, conversation_transcript, skill_levels
+
+Requirements:
+1. advisor_description: Write 3-6 sentences about a student specifically interested in {topic}. 
+   - Mention {topic} explicitly and specific subfields within {topic}
+   - Reference their specific interests: {', '.join(interests)}
+   - Mention their goal: {goal}
+   - Be very specific to {topic}, not generic
+
+2. conversation_transcript: Create a realistic conversation between an Advisor and Student about {topic}.
+   - {transcript_turns} question-answer pairs
+   - Format: "Advisor: question\\nStudent: answer\\n\\nAdvisor: question\\nStudent: answer"
+   - Questions and answers must be VERY specific to {topic}
+   - Student answers should show genuine interest in {topic}
+
+3. skill_levels: Array of [skill_name, level] where level is "Beginner", "Intermediate", or "Advanced"
+   - Include skills specifically relevant to {topic}
+   - If {topic} is biology: include Biology, Genetics, Lab Techniques, Research Methods
+   - If {topic} is astronomy: include Astronomy, Physics, Mathematics, Observational Skills  
+   - If {topic} is economics: include Economics, Statistics, Data Analysis, Research
+   - If {topic} is art: include Art History, Creative Skills, Cultural Studies, Analysis
+   - Always include Mathematics and adjust other skills to match the topic
+
+Make everything highly specific to {topic}. Avoid generic academic language.
+
+Topic: {topic}
+Student interests: {interests}
+Student goal: {goal}
+Student gaps: {gaps}
+Language: {language}
+"""
+            
             # Reuse strict JSON helper
-            obj = _llm_json(client, MODEL_VERDICT, user_prompt, max_tokens=500)
+            obj = _llm_json(client, MODEL_VERDICT, topic_specific_prompt, max_tokens=600)
 
             # Light post-validate / coerce
             adv = (obj.get("advisor_description") or "").strip()
@@ -586,24 +594,91 @@ def generate_advisor_pack(seed: dict) -> dict:
             pass
 
     # -------- Fallback (no LLM) --------
-    # Build a compact template that mirrors your requested format.
-    advisor_description = (
-        f"Student shows strong interest in {topic}. "
-        f"They want to build systems and understand key algorithms in {', '.join(interests[:2])}. "
-        f"Currently working as a {role} and aims to {goal}. "
-        f"Motivated but needs structured practice in {', '.join(gaps)} to progress."
-    )
+    # Build a topic-specific template
+    
+    # Topic-specific advisor descriptions
+    if "astronomy" in topic.lower() or "space" in topic.lower():
+        advisor_description = (
+            f"Student shows passionate interest in {topic}, particularly in observational astronomy and stellar physics. "
+            f"They are eager to understand celestial mechanics, planetary science, and the physics of stars and galaxies. "
+            f"Currently studying to {goal} and aims to work with telescopes and space exploration data. "
+            f"Strong motivation for learning but needs more foundation in {', '.join(gaps)} to advance in astrophysics research."
+        )
+        qa = [
+            ("What draws you to astronomy and space science?",
+             f"I'm captivated by {interests[0]} and want to understand how stars form, evolve, and die, plus discover exoplanets."),
+            ("Do you have experience with telescopes and observational techniques?",
+             "I've done some amateur stargazing, but I need to learn proper observational methods and data analysis."),
+            ("What's your ultimate goal in astronomy?",
+             f"I want to work at an observatory or space agency doing research in {interests[0] if interests else 'planetary science'}."),
+        ]
+        topic_levels = {
+            "Astronomy": levels.get("Machine Learning", "Beginner"),
+            "Physics": levels.get("Mathematics", "Beginner"), 
+            "Mathematics": levels.get("Mathematics", "Beginner"),
+            "Observational Skills": "Beginner"
+        }
+    elif "biology" in topic.lower() or "genetic" in topic.lower():
+        advisor_description = (
+            f"Student demonstrates keen interest in {topic}, especially molecular biology and genetic research. "
+            f"They want to understand cellular processes, DNA sequencing, and biotechnology applications. "
+            f"Currently preparing to {goal} with focus on laboratory techniques and research methodology. "
+            f"Enthusiastic learner who needs stronger background in {', '.join(gaps)} for advanced biological research."
+        )
+        qa = [
+            ("What aspects of biology excite you most?",
+             f"I'm fascinated by {interests[0]} and want to work on genetic engineering, CRISPR technology, and synthetic biology."),
+            ("Do you have laboratory experience?",
+             "I've done basic lab work in school, but I need more experience with advanced techniques like PCR and gel electrophoresis."),
+            ("Where do you see yourself working in biology?",
+             f"I want to work in a research lab or biotech company focusing on {interests[0] if interests else 'genetic research'}."),
+        ]
+        topic_levels = {
+            "Biology": levels.get("Machine Learning", "Beginner"),
+            "Genetics": "Beginner",
+            "Lab Techniques": "Beginner", 
+            "Research Methods": levels.get("Statistics", "Beginner")
+        }
+    elif "economics" in topic.lower() or "finance" in topic.lower():
+        advisor_description = (
+            f"Student shows strong analytical interest in {topic}, particularly econometrics and financial modeling. "
+            f"They want to understand market dynamics, policy analysis, and quantitative economic research. "
+            f"Currently working toward {goal} with emphasis on data-driven economic analysis. "
+            f"Motivated to learn but requires stronger foundation in {', '.join(gaps)} for advanced economic research."
+        )
+        qa = [
+            ("What interests you about economics and finance?",
+             f"I'm drawn to {interests[0]} and want to analyze market behavior, policy impacts, and economic forecasting."),
+            ("Do you have experience with economic data analysis?",
+             "I understand basic concepts, but I need to learn econometric methods and statistical software like R or Stata."),
+            ("What's your career goal in economics?",
+             f"I want to work as an economic analyst or researcher focusing on {interests[0] if interests else 'policy analysis'}."),
+        ]
+        topic_levels = {
+            "Economics": levels.get("Machine Learning", "Beginner"),
+            "Statistics": levels.get("Statistics", "Beginner"),
+            "Data Analysis": levels.get("Programming", "Beginner"),
+            "Research": "Beginner"
+        }
+    else:
+        # Generic fallback
+        advisor_description = (
+            f"Student shows strong interest in {topic}. "
+            f"They want to build expertise and understand key concepts in {', '.join(interests[:2])}. "
+            f"Currently working as a {role} and aims to {goal}. "
+            f"Motivated but needs structured practice in {', '.join(gaps)} to progress."
+        )
+        qa = [
+            ("What specifically interests you about this field?",
+             f"I'm fascinated by {interests[0] if interests else topic} and want to develop deep expertise in this area."),
+            ("Do you have relevant experience?",
+             "I have some background, but I need more structured learning and practice."),
+            ("What's your ultimate career goal?",
+             f"I want to work professionally in {topic} or do research in {interests[0] if interests else topic}."),
+        ]
+        topic_levels = levels
 
-    qa = [
-        ("What specifically interests you about this field?",
-         f"I'm fascinated by {interests[0]} and want to build systems that can understand language and images."),
-        ("Do you have experience with mathematics and statistics?",
-         "I can code, but my math and stats are rusty."),
-        ("What's your ultimate career goal?",
-         f"I want to work at an AI company or do research in {interests[0]}."),
-    ]
     qa = qa[:transcript_turns]
-
     lines = []
     for q, a in qa:
         lines.append(f"Advisor: {q}")
@@ -611,7 +686,7 @@ def generate_advisor_pack(seed: dict) -> dict:
         lines.append("")  # blank line between turns
     conversation_transcript = "\n".join(lines).strip()
 
-    skill_levels = [[k, v] for k, v in levels.items()]
+    skill_levels = [[k, v] for k, v in topic_levels.items()]
 
     return {
         "advisor_description": advisor_description,

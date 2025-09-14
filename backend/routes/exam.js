@@ -40,6 +40,7 @@ router.post("/verdict", async (req, res) => {
   const advisorDescription = req.body?.advisor_description || "";
   const conversationTranscript = req.body?.conversation_transcript || "";
   const skillLevels = req.body?.skill_levels || [];
+  const seedInterests = req.body?.seed_interests || "";
   
   const { out, err } = await runPy({ 
     mode: "verdict", 
@@ -49,7 +50,8 @@ router.post("/verdict", async (req, res) => {
       answers: userAnswers,
       advisor_description: advisorDescription,
       conversation_transcript: conversationTranscript,
-      skill_levels: skillLevels
+      skill_levels: skillLevels,
+      seed_interests: seedInterests
     }
   });
   if (err) return res.json({ error: `Python error: ${err}` });
