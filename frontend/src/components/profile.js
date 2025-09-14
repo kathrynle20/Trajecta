@@ -57,8 +57,8 @@ const Profile = ({ user }) => {
       console.log("user experiences:", userExperiences);
       const formattedExperiences = userExperiences.map(exp => ({
         id: user.id,
-        skill: exp.topic,
-        years_of_experience: exp.years
+        skill: exp.skill,
+        years_of_experience: exp.years_of_experience
       }));
       console.log("formatted experiences:", formattedExperiences);
 
@@ -90,7 +90,7 @@ const Profile = ({ user }) => {
     <div className="profile-container">
       <div className="profile-header">
         <h1 className="profile-title">Hi {user.name}!</h1>
-        <img src={user.photo} alt={user.name} className="profile-avatar" />
+        <img src={user.avatar_url} alt={user.name} className="profile-avatar" />
         <p className="profile-email">{user.email}</p>
       </div>
       

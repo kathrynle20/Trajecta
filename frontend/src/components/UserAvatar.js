@@ -4,7 +4,7 @@ import './UserAvatar.css';
 const UserAvatar = ({ user, onLogout, onProfileClick }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  console.log("user for picture:", user);
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -40,13 +40,13 @@ const UserAvatar = ({ user, onLogout, onProfileClick }) => {
   return (
     <div className="user-avatar-container" ref={dropdownRef}>
       <button className="avatar-button" onClick={toggleDropdown}>
-        <img src={user.photo} alt={user.name} className="avatar-image" />
+        <img src={user.avatar_url} alt={user.name} className="avatar-image" />
       </button>
       
       {isDropdownOpen && (
         <div className="avatar-dropdown">
           <div className="dropdown-header">
-            <img src={user.photo} alt={user.name} className="dropdown-avatar" />
+            <img src={user.avatar_url} alt={user.name} className="dropdown-avatar" />
             <div className="dropdown-user-info">
               <p className="dropdown-name">{user.name}</p>
               <p className="dropdown-email">{user.email}</p>

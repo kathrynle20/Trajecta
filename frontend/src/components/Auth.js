@@ -141,7 +141,7 @@ const Auth = ({ user, onLogin, onLogout }) => {
       {user ? (
         <div className="user-info">
           <div className="user-profile">
-            <img src={user.photo} alt={user.name} className="user-avatar" />
+            <img src={user.avatar_url} alt={user.name} className="user-avatar" />
             <div className="user-details">
               <h3>Welcome, {user.name}!</h3>
               <p>{user.email}</p>

@@ -41,15 +41,18 @@ function App() {
   useEffect(() => {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('user');
-    console.log("STORED USER:", storedUser);
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user'); // Clear invalid data
+      }
     }
     setLoading(false);
   }, []);
 
   const handleUserLogin = (userData) => {
-    console.log("USER DATA:", userData);
     setUser(userData);
   };
 
