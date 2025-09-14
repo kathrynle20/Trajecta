@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config({ path: '../frontend/.env' });
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 
 // Database configuration
 const pool = new Pool({

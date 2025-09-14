@@ -6,7 +6,7 @@ const router = express.Router();
 console.log("exam router");
 
 // Python configuration
-const pythonPath = "/Users/kathryn/opt/anaconda3/bin/python3";
+const pythonPath = "C:\\Users\\256bit.by\\AppData\\Local\\Programs\\Python\\Python39\\python.exe";
 const scriptPath = path.join(__dirname, "../db_python/script.py");
 
 router.post('/run1', (req, res) => {

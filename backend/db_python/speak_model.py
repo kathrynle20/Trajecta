@@ -4,7 +4,7 @@ from anthropic import Anthropic
 from dotenv import load_dotenv
 
 
-load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-8')  # BOM-aware
+load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-16')  # BOM-aware
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 print("Loaded API Key:", api_key[:10], "...")  # sanity check

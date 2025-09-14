@@ -5,8 +5,8 @@
   "type": "commonjs",
   "main": "app.js",
   "scripts": {
-    "start": "PORT=3001 node ../bin/www",
-    "dev": "PORT=3001 nodemon ../bin/www",
+    "start": "set PORT=3001 && node ../bin/www",
+    "dev": "set PORT=3001 && nodemon ../bin/www",
     "db-reader": "node db-reader.js",
     "db-explorer": "node db-explorer.js"
   },
@@ -17,7 +17,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "jade": "^1.11.0",
+    "jade": "^0.29.0",
     "morgan": "^1.10.0",
     "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",

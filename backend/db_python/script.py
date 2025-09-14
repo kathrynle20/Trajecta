@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from anthropic import Anthropic
 
 # Load .env file
-load_dotenv(dotenv_path='../../frontend/.env')
+load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-16')
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 if not api_key:
