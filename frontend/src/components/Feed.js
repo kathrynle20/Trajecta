@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Feed.css';
 
-const Feed = ({ communityId, communityName, onPostSelect }) => {
+const Feed = ({ communityId, communityName, communityDescription, onPostSelect }) => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -123,7 +123,12 @@ const Feed = ({ communityId, communityName, onPostSelect }) => {
   return (
     <div className="feed">
       <div className="feed-header">
-        <h3>{communityName} Feed</h3>
+        <div className="feed-header-content">
+          <h3>{communityName} Feed</h3>
+          {communityDescription && (
+            <p className="community-description">{communityDescription}</p>
+          )}
+        </div>
         <button 
           className="create-post-btn"
           onClick={() => setShowCreatePost(!showCreatePost)}

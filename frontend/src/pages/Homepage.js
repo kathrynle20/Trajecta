@@ -10,6 +10,7 @@ const Homepage = ({user}) => {
   const [data, setData] = useState(null);
   const [selectedCommunityId, setSelectedCommunityId] = useState(1);
   const [selectedCommunityName, setSelectedCommunityName] = useState('Personal');
+  const [selectedCommunityDescription, setSelectedCommunityDescription] = useState('Your personal space for thoughts and updates');
   const [currentView, setCurrentView] = useState('feed'); // 'feed' or 'postDetail'
   const [selectedPostId, setSelectedPostId] = useState(null);
 
@@ -30,9 +31,10 @@ const Homepage = ({user}) => {
   }, []);
 
   // Event handlers
-  const handleCommunitySelect = (communityId, communityName) => {
+  const handleCommunitySelect = (communityId, communityName, communityDescription) => {
     setSelectedCommunityId(communityId);
     setSelectedCommunityName(communityName);
+    setSelectedCommunityDescription(communityDescription || '');
     setCurrentView('feed'); // Reset to feed view when switching communities
   };
 
@@ -67,12 +69,13 @@ const Homepage = ({user}) => {
         {currentView === 'feed' ? (
           <>
             <div className="communities-sidebar">
-              <YourCommunities onCommunitySelect={handleCommunitySelect} />
+              <YourCommunities onCommunitySelect={handleCommunitySelect} user={user} />
             </div>
             <div className="main-feed">
               <Feed 
                 communityId={selectedCommunityId} 
                 communityName={selectedCommunityName}
+                communityDescription={selectedCommunityDescription}
                 onPostSelect={handlePostSelect}
               />
             </div>

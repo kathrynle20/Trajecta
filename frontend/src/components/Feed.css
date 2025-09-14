@@ -22,11 +22,23 @@
   z-index: 10;
 }
 
+.feed-header-content {
+  flex: 1;
+}
+
 .feed-header h3 {
   color: #333;
   font-size: 1.5rem;
   font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.community-description {
+  color: #666;
+  font-size: 0.9rem;
   margin: 0;
+  font-style: italic;
+  line-height: 1.4;
 }
 
 .create-post-btn {
