@@ -1,38 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import InterestsManager from './InterestsManager';
 import ExperiencesManager from './ExperiencesManager';
 import './profile.css';
 
 const Profile = ({ user }) => {
-  const [userInterests, setUserInterests] = useState([]);
   const [userExperiences, setUserExperiences] = useState([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load interests from localStorage on component mount
-  useEffect(() => {
-    const savedInterests = localStorage.getItem(`interests_${user.id}`);
-    if (savedInterests) {
-      setUserInterests(JSON.parse(savedInterests));
-    }
-  }, [user.id]);
+  // // Load experiences from backend on component mount
+  // useEffect(() => {
+  //   const fetchExperiences = async () => {
+  //     try {
+  //       const response = await fetch(`http://localhost:3001/profile/experiences/${user.id}`, {
+  //         credentials: 'include'
+  //       });
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         // Convert from backend format (skill, years) to frontend format (topic, years)
+  //         const formattedExperiences = data.experiences.map(exp => ({
+  //           id: exp.id,
+  //           skill: exp.skill,
+  //           years_of_experience: exp.years_of_experience
+  //         }));
+  //         setUserExperiences(formattedExperiences);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching experiences:', error);
+  //       // Fallback to localStorage if backend fails
+  //       const savedExperiences = localStorage.getItem(`experiences_${user.id}`);
+  //       if (savedExperiences) {
+  //         setUserExperiences(JSON.parse(savedExperiences));
+  //       }
+  //     }
+  //   };
 
-  // Load experiences from localStorage on component mount
-  useEffect(() => {
-    const savedExperiences = localStorage.getItem(`experiences_${user.id}`);
-    if (savedExperiences) {
-      setUserExperiences(JSON.parse(savedExperiences));
-    }
-  }, [user.id]);
+  //   fetchExperiences();
+  // }, [user.id]);
 
-  // Save interests to localStorage whenever they change
-  const handleInterestsChange = (newInterests) => {
-    setUserInterests(newInterests);
-    localStorage.setItem(`interests_${user.id}`, JSON.stringify(newInterests));
-  };
-
-  // Save experiences to localStorage whenever they change
+  // Handle experiences changes (mark as unsaved)
   const handleExperiencesChange = (newExperiences) => {
     setUserExperiences(newExperiences);
-    localStorage.setItem(`experiences_${user.id}`, JSON.stringify(newExperiences));
+    setHasUnsavedChanges(true);
+    // Keep localStorage as backup
+    // localStorage.setItem(`experiences_${user.id}`, JSON.stringify(newExperiences));
+  };
+
+  // Save experiences to backend
+  const handleSaveExperiences = async () => {
+    setIsSaving(true);
+    try {
+      console.log("user experiences:", userExperiences);
+      const formattedExperiences = userExperiences.map(exp => ({
+        id: user.id,
+        skill: exp.topic,
+        years_of_experience: exp.years
+      }));
+      console.log("formatted experiences:", formattedExperiences);
+
+      fetch('http://localhost:3001/profile/set-user-experiences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ experiences: formattedExperiences })
+      })
+      .then(res => res.json())
+      .then(response => {
+        console.log('Backend response:', response);
+      })
+      .catch(error => {
+        console.error('Error sending user experience data to backend:', error);
+      });
+
+    } catch (error) {
+      console.error('Error saving experiences:', error);
+      alert('Error saving interests. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -44,30 +90,30 @@ const Profile = ({ user }) => {
       </div>
       
       <div className="profile-section">
-        <h2 className="section-title">Interests</h2>
-        {userInterests.length === 0 && (
+        <div className="section-header">
+          <h2 className="section-title">Interests</h2>
+          {hasUnsavedChanges && (
+            <button 
+              className="save-button"
+              onClick={handleSaveExperiences}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+        </div>
+        {userExperiences.length === 0 && (
           <p className="section-content empty-state">No interests added yet</p>
         )}
-        <InterestsManager 
-          userInterests={userInterests}
-          onInterestsChange={handleInterestsChange}
+        <ExperiencesManager 
+          userExperiences={userExperiences}
+          onExperiencesChange={handleExperiencesChange}
         />
       </div>
       
       <div className="profile-section">
         <h2 className="section-title">Communities</h2>
         <p className="section-content empty-state">No communities joined yet</p>
-      </div>
-
-      <div className="profile-section">
-        <h2 className="section-title">Experiences</h2>
-        {userExperiences.length === 0 && (
-          <p className="section-content empty-state">No experiences added yet</p>
-        )}
-        <ExperiencesManager 
-          userExperiences={userExperiences}
-          onExperiencesChange={handleExperiencesChange}
-        />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './Auth.css';
 
 const Auth = ({ user, onLogin, onLogout }) => {
@@ -13,11 +13,11 @@ const Auth = ({ user, onLogin, onLogout }) => {
     return JSON.parse(jsonPayload);
   };
 
-  const handleCredentialResponse = useCallback((response) => {
+  const handleCredentialResponse = useCallback(async (response) => {
     // Decode the JWT token to get user info
     const userObject = parseJwt(response.credential);
     const userData = {
-      id: userObject.sub,
+      google_id: userObject.sub,
       name: userObject.name,
       email: userObject.email,
       photo: userObject.picture
@@ -26,24 +26,24 @@ const Auth = ({ user, onLogin, onLogout }) => {
     console.log("USER DATA:", userData);
     
     // Send user data to backend
-    fetch('http://localhost:3001/auth/set-user-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ user: userData })
-    })
-    .then(res => res.json())
-    .then(response => {
-      console.log('Backend response:', response);
-    })
-    .catch(error => {
+    try {
+      const response = await fetch('http://localhost:3001/auth/set-user-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ user: userData })
+      });
+      
+      const userResult = await response.json();
+      console.log('Backend response:', userResult);
+      console.log("USER RESULT:", userResult.user);
+      localStorage.setItem('user', JSON.stringify(userResult.user));
+      onLogin(userResult.user);
+    } catch (error) {
       console.error('Error sending user data to backend:', error);
-    });
-    
-    localStorage.setItem('user', JSON.stringify(userData));
-    onLogin(userData);
+    }
   }, [onLogin]);
 
   useEffect(() => {

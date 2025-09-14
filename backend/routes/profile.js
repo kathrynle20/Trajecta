@@ -1,5 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
+const { userExperiencesDb } = require('../db');
 const router = express.Router();
 
 // Database configuration
@@ -64,27 +65,22 @@ router.post('/interests', requireAuth, async (req, res) => {
 
 // Save user experiences to user_experiences table
 router.post('/experiences', requireAuth, async (req, res) => {
-  const { userId, experiences } = req.body;
-  
-  // Verify the user is updating their own profile
-  if (req.user.id !== userId) {
-    return res.status(403).json({ error: 'Unauthorized to update this profile' });
-  }
+  const { experiences } = req.body;
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // First, delete existing experiences for this user
-    await client.query('DELETE FROM user_experiences WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM user_experiences WHERE id = $1', [experiences.id]);
 
     // Insert new experiences
     if (experiences && experiences.length > 0) {
       for (const experience of experiences) {
         await client.query(`
-          INSERT INTO user_experiences (user_id, skill, years_of_experience)
+          INSERT INTO user_experiences (id, skill, years_of_experience)
           VALUES ($1, $2, $3)
-        `, [userId, experience.skill, experience.years]);
+        `, [experience.id, experience.skill, experience.years]);
       }
     }
 
@@ -138,7 +134,7 @@ router.get('/experiences/:userId', requireAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'SELECT id, skill, years_of_experience FROM user_experiences WHERE user_id = $1 ORDER BY skill',
+      'SELECT id, skill, years_of_experience FROM user_experiences WHERE id = $1 ORDER BY skill',
       [userId]
     );
 
@@ -157,5 +153,28 @@ router.get('/experiences/:userId', requireAuth, async (req, res) => {
     client.release();
   }
 });
+
+router.post('/set-user-experiences', async (req, res) => {
+  try {
+    const { experiences } = req.body;
+    console.log("user backend:", experiences);
+    
+    // Save user to database (find existing or create new)
+    await userExperiencesDb.addExperiences(experiences);
+    
+    // Send success response
+    res.json({ 
+      success: true, 
+      message: 'User experience data saved to database successfully',
+    });
+  } catch (error) {
+    console.error('Error saving user experience to database:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save user experience data to database',
+      error: error.message
+    });
+  }
+})
 
 module.exports = router;
