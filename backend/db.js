@@ -46,16 +46,18 @@ const userDb = {
   // Create new user from Google profile
   async createFromGoogleProfile(profile) {
     const client = await pool.connect();
+    const id = uuidv4();
     try {
       const result = await client.query(
-        `INSERT INTO users (email, name, avatar_url, google_id, bio, created_at) 
-         VALUES ($1, $2, $3, $4, $5, NOW()) 
+        `INSERT INTO users (id, email, name, avatar_url, google_id, bio, created_at) 
+         VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
          RETURNING *`,
         [
+          id,
           profile.emails[0].value,
           profile.displayName,
           profile.photos[0].value,
-          profile.id,
+          profile.google_id,
           `New user joined via Google OAuth`
         ]
       );
@@ -68,7 +70,7 @@ const userDb = {
   // Find or create user from Google profile
   async findOrCreateFromGoogleProfile(profile) {
     // First try to find existing user by Google ID
-    let user = await this.findByGoogleId(profile.id);
+    let user = await this.findByGoogleId(profile.google_id);
     
     if (user) {
       // Update user info in case it changed
@@ -83,7 +85,7 @@ const userDb = {
             profile.displayName,
             profile.photos[0].value,
             profile.emails[0].value,
-            profile.id
+            profile.google_id
           ]
         );
         return result.rows[0];
@@ -97,4 +99,24 @@ const userDb = {
   }
 };
 
-module.exports = { pool, userDb };
+const userExperiencesDb = {
+  // Find user by Google ID
+  async addExperiences(experiences) {
+    const client = await pool.connect();
+    try {
+      for (const experience of experiences) {
+        // Convert string to UUID using PostgreSQL cast
+        await client.query(
+          `INSERT INTO user_experiences (id, skill, years_of_experience)
+           VALUES ($1::uuid, $2, $3::integer)
+           RETURNING *`,
+          [experience.id, experience.skill, experience.years_of_experience]
+        );
+      }
+    } finally {
+      client.release();
+    }
+  },
+}
+
+module.exports = { pool, userDb, userExperiencesDb };

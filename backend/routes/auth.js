@@ -27,7 +27,7 @@ router.post('/set-user-data', async (req, res) => {
     
     // Convert frontend user data to Google profile format for database functions
     const googleProfile = {
-      id: user.id,
+      google_id: user.google_id,
       displayName: user.name,
       emails: [{ value: user.email }],
       photos: [{ value: user.photo }]

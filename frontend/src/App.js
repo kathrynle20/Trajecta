@@ -41,6 +41,7 @@ function App() {
   useEffect(() => {
     // Check if user is stored in localStorage
     const storedUser = localStorage.getItem('user');
+    console.log("STORED USER:", storedUser);
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -48,6 +49,7 @@ function App() {
   }, []);
 
   const handleUserLogin = (userData) => {
+    console.log("USER DATA:", userData);
     setUser(userData);
   };
 

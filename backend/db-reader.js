@@ -92,9 +92,9 @@ async function readExperiences() {
     
     // Get all experiences
     const result = await client.query(`
-      SELECT id, user_id, skill, years_of_experience
+      SELECT id, id, skill, years_of_experience
       FROM user_experiences
-      ORDER BY user_id, skill;
+      ORDER BY id, skill;
     `);
     
     console.log(`Found ${result.rows.length} experiences:`);
@@ -102,7 +102,6 @@ async function readExperiences() {
     
     result.rows.forEach(row => {
       console.log(`ID: ${row.id}`);
-      console.log(`User ID: ${row.user_id}`);
       console.log(`Experience: ${row.skill}`);
       console.log(`Years: ${row.years_of_experience}`);
       console.log('---');
@@ -123,9 +122,9 @@ async function readExperiencesByUserId(userId) {
     console.log(`Reading experiences for user ID: ${userId}`);
     
     const result = await client.query(`
-      SELECT id, user_id, skill, years_of_experience
+      SELECT id, skill, years_of_experience
       FROM user_experiences
-      WHERE user_id = $1
+      WHERE id = $1
       ORDER BY skill;
     `, [userId]);
     
