@@ -45,4 +45,26 @@ router.post("/verdict", async (req, res) => {
   }
 });
 
+// Add after your other routes
+router.post("/rank", async (req, res) => {
+  // expects { query: "econometrics", user: { interests: [...], top3: [...], advisor_description: "...", conversation_transcript: "...", skill_levels: [["Mathematics","Beginner"], ...] } }
+  const arg = { mode: "rank", ...req.body };
+  let out = "", err = "";
+  const py = spawn(pythonPath, [scriptPath, JSON.stringify(arg)], {
+    cwd: path.join(__dirname, "../db_python")
+  });
+  py.stdout.on("data", (d) => (out += d));
+  py.stderr.on("data", (d) => (err += d));
+  py.on("close", () => {
+    if (err) return res.json({ error: `Python error: ${err}` });
+    try {
+      const result = JSON.parse(out);
+      return res.json(result);
+    } catch (e) {
+      return res.json({ error: `Unexpected output: ${out}` });
+    }
+  });
+});
+
+
 module.exports = router;

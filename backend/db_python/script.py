@@ -197,6 +197,199 @@ def make_verdict(payload: dict) -> dict:
             return out
     return out
 
+# ==== BEGIN: free-text relevance ranking (mode="rank") ====
+
+# Light synonym/term expander -> topic weights
+TERMS2TOPICS = {
+    # math/stats/econ
+    "econometrics": [("stats", 0.85), ("economics", 0.7), ("data", 0.6)],
+    "regression":   [("stats", 0.8), ("data", 0.7), ("ml", 0.5)],
+    "bayesian":     [("stats", 0.8), ("ml", 0.6)],
+    "causal":       [("stats", 0.7), ("economics", 0.6), ("data", 0.5)],
+    "algebra":      [("math", 0.8)],
+    "calculus":     [("math", 0.8)],
+    "probability":  [("math", 0.7), ("stats", 0.6)],
+
+    # physics/space
+    "space":        [("physics", 0.7), ("math", 0.35), ("robotics", 0.3)],
+    "astronomy":    [("physics", 0.75), ("math", 0.35)],
+    "astrophysics": [("physics", 0.85), ("math", 0.4)],
+
+    # cs/web/systems
+    "database":     [("data", 0.6), ("cs", 0.5)],
+    "frontend":     [("web", 0.8), ("design", 0.5)],
+    "backend":      [("web", 0.6), ("systems", 0.6), ("cs", 0.5)],
+    "full stack":   [("web", 0.9), ("cs", 0.5)],
+    "api":          [("web", 0.7), ("systems", 0.4)],
+    "docker":       [("systems", 0.7), ("cs", 0.4)],
+
+    # ai/ml/nlp/robotics
+    "neural network": [("ml", 0.9), ("ai", 0.8)],
+    "deep learning":  [("ml", 0.9), ("ai", 0.8)],
+    "nlp":            [("nlp", 1.0), ("ai", 0.6)],
+    "natural language processing": [("nlp", 1.0), ("ai", 0.6)],
+    "reinforcement learning": [("ml", 0.8), ("ai", 0.7)],
+    "robotics":      [("robotics", 1.0), ("cs", 0.5), ("physics", 0.6)],
+
+    # bio
+    "genomics":      [("biology", 0.8), ("data", 0.5)],
+    "bioinformatics":[("biology", 0.7), ("cs", 0.6), ("data", 0.5)],
+
+    # design/education/history/art
+    "ux":            [("design", 0.8), ("web", 0.4)],
+    "typography":    [("design", 0.7)],
+    "pedagogy":      [("education", 0.8)],
+    "historiography":[("history", 0.9)],
+    "curation":      [("art", 0.7), ("history", 0.5)],
+}
+
+TOPIC_SYNONYMS = {
+    "math": ["algebra","calculus","linear algebra","probability","statistics"],
+    "stats":["statistics","regression","bayesian","inference"],
+    "economics":["econometrics","microeconomics","macroeconomics","game theory"],
+    "physics":["space","astronomy","astrophysics","mechanics","quantum"],
+    "quantum":["quantum computing","qiskit","qubits"],
+    "cs":["programming","software","computer science","git"],
+    "web":["frontend","backend","full stack","api","react","html","css","javascript"],
+    "systems":["linux","docker","kubernetes","distributed systems"],
+    "algorithms":["data structures","graphs","dp","greedy"],
+    "ml":["machine learning","deep learning","neural network","supervised learning"],
+    "ai":["artificial intelligence","agents","planning","ai ethics"],
+    "nlp":["natural language processing","text","language model","translation"],
+    "data":["sql","pandas","analytics","visualization","etl","database"],
+    "biology":["molecular biology","genomics","bioinformatics"],
+    "robotics":["ros","sensors","control","kinematics"],
+    "history":["archives","historiography","primary sources"],
+    "languages":["linguistics","phonetics","syntax","translation"],
+    "art":["museum","curation","digital humanities"],
+    "education":["pedagogy","assessment","learning science"],
+    "design":["ux","typography","design systems","interaction design"],
+}
+
+ALL_TOPICS = list(TOPIC_SYNONYMS.keys())
+
+def _text_score_for_topic(text: str, topic: str) -> float:
+    """Tiny keyword hit counter as a soft boost from free text."""
+    if not text: return 0.0
+    t = text.lower()
+    hits = 0
+    for kw in TOPIC_SYNONYMS.get(topic, []):
+        if kw in t: hits += 1
+    return min(0.3, 0.1 * hits)  # cap small
+
+def _seed_weights_from_term(term: str) -> dict:
+    term_l = (term or "").lower().strip()
+    weights = {t: 0.0 for t in ALL_TOPICS}
+    if not term_l: return weights
+
+    # Exact topic match
+    if term_l in weights:
+        weights[term_l] = max(weights[term_l], 1.0)
+
+    # Dictionary hits
+    for key, pairs in TERMS2TOPICS.items():
+        if key in term_l or term_l in key:
+            for topic, w in pairs:
+                weights[topic] = max(weights[topic], w)
+
+    # Synonym hits
+    for topic, syns in TOPIC_SYNONYMS.items():
+        for s in syns:
+            if s in term_l or term_l in s:
+                weights[topic] = max(weights[topic], 0.6)
+    return weights
+
+def _normalize_scores(d: dict) -> dict:
+    m = max(d.values()) if d else 0.0
+    if m <= 0: return d
+    return {k: v / m for k, v in d.items()}
+
+def _rank_to_courses(topic_scores: dict, top_k=5):
+    # Use your existing CATALOG (from verdict section)
+    ranked = []
+    for c in CATALOG:
+        s = 0.0
+        for tag in c["tags"]:
+            s += topic_scores.get(tag, 0.0)
+        ranked.append((s, c))
+    ranked.sort(key=lambda x: x[0], reverse=True)
+    return [c for s, c in ranked[:top_k] if s > 0]
+
+def rank_query(payload: dict) -> dict:
+    """
+    payload = {
+      "query": "econometrics",
+      "user": {
+        "interests": ["ml","data","math"],
+        "top3": ["ml","data","cs"],
+        "advisor_description": "…",
+        "conversation_transcript": "…",
+        "skill_levels": [["Mathematics","Beginner"],["Programming","Intermediate"], ...]
+      }
+    }
+    """
+    q = (payload.get("query") or "").strip()
+    user = payload.get("user", {}) or {}
+    interests = set(user.get("interests") or [])
+    top3 = set(user.get("top3") or [])
+    desc = user.get("advisor_description") or ""
+    convo = user.get("conversation_transcript") or ""
+    combined_text = f"{desc}\n{convo}".strip()
+
+    # 1) seed scores from the term itself
+    scores = _seed_weights_from_term(q)
+
+    # 2) boost by user’s stated interests/top3
+    for topic in ALL_TOPICS:
+        if topic in interests: scores[topic] += 0.25
+        if topic in top3:      scores[topic] += 0.20
+
+    # 3) light boost from advisor description / transcript text
+    for topic in ALL_TOPICS:
+        scores[topic] += _text_score_for_topic(combined_text, topic)
+
+    # 4) tiny nudge for gaps (Beginner levels) = “relevance to growth”
+    gaps = set()
+    for name, level in user.get("skill_levels", []):
+        lvl = (level or "").lower()
+        if "beginner" in lvl:
+            name_l = (name or "").lower()
+            if "math" in name_l: gaps.add("math")
+            if "stat" in name_l: gaps.add("stats")
+            if "program" in name_l or "cs" in name_l: gaps.add("cs")
+            if "machine learning" in name_l: gaps.add("ml")
+    for g in gaps:
+        scores[g] += 0.1
+
+    # 5) normalize & rank
+    scores = _normalize_scores(scores)
+    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+
+    # 6) pick courses by these topic weights
+    top_courses = _rank_to_courses(scores, top_k=5)
+
+    # reasons: show top 6 with non-zero scores
+    explanations = [
+        {"topic": t, "score": round(s, 3),
+         "reason": (
+            ("interest/top3 boost; " if (t in interests or t in top3) else "") +
+            ("context match; " if _text_score_for_topic(combined_text, t) > 0 else "") +
+            ("term mapping; " if _seed_weights_from_term(q).get(t,0)>0 else "")
+         ).strip().rstrip(";")
+        }
+        for t, s in ranked[:6] if s > 0
+    ]
+
+    return {
+        "query": q,
+        "topic_scores": [{"topic": t, "score": round(s, 4)} for t, s in ranked if s > 0][:10],
+        "explanations": explanations,
+        "recommended_courses": top_courses
+    }
+
+# ==== END: free-text relevance ranking ====
+
+
 # ---------- main ----------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
