@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const { userDb } = require('../db');
 const router = express.Router();
 
 // Auth with Google
@@ -19,9 +20,40 @@ router.get('/google/callback',
     }
 );
 
-router.post('/set-user-data', (req, res) => {
-  const { user } = req.body;
-  console.log("user backend:", user);
+router.post('/set-user-data', async (req, res) => {
+  try {
+    const { user } = req.body;
+    console.log("user backend:", user);
+    
+    // Convert frontend user data to Google profile format for database functions
+    const googleProfile = {
+      id: user.id,
+      displayName: user.name,
+      emails: [{ value: user.email }],
+      photos: [{ value: user.photo }]
+    };
+    
+    // Save user to database (find existing or create new)
+    const dbUser = await userDb.findOrCreateFromGoogleProfile(googleProfile);
+    console.log("Database user:", dbUser);
+    
+    // Store user in session (use database user data)
+    req.session.user = dbUser;
+    
+    // Send success response
+    res.json({ 
+      success: true, 
+      message: 'User data saved to database successfully',
+      user: dbUser 
+    });
+  } catch (error) {
+    console.error('Error saving user to database:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save user data to database',
+      error: error.message
+    });
+  }
 })
 
 // Logout user
