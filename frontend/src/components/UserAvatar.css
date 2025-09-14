@@ -27,6 +27,23 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.default-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .avatar-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -64,6 +81,12 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #f8f9fa;
+}
+
+.default-avatar.dropdown-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
 }
 
 .dropdown-user-info {
@@ -132,15 +155,8 @@
 }
 
 /* Header positioning */
-.App-header {
-  position: relative;
-  z-index: 1000;
-}
-
 .header-avatar {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+  position: relative;
   z-index: 10001;
 }
 
@@ -151,17 +167,19 @@
     right: -8px;
   }
   
-  .header-avatar {
-    top: 16px;
-    right: 16px;
-    z-index: 10001;
-  }
-  
   .dropdown-header {
     padding: 12px;
   }
   
   .dropdown-item {
     padding: 10px 12px;
+  }
+  
+  .default-avatar {
+    font-size: 14px;
+  }
+  
+  .default-avatar.dropdown-avatar {
+    font-size: 18px;
   }
 }

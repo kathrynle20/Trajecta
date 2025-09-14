@@ -7,7 +7,7 @@ import Homepage from './pages/Homepage';
 import './App.css';
 import Question from './components/Question';
 
-// Header component that needs access to navigate
+// Modern Header component with navigation
 const AppHeader = ({ user, onLogin, onLogout }) => {
   const navigate = useNavigate();
 
@@ -19,18 +19,51 @@ const AppHeader = ({ user, onLogin, onLogout }) => {
     navigate('/');
   };
 
+  const handleExamClick = () => {
+    navigate('/exam');
+  };
+
   return (
     <header className="App-header">
-      <h1 onClick={handleDashboardClick} style={{cursor: 'pointer'}}>Trajecta</h1>
-      {user && (
-        <div className="header-avatar">
-          <UserAvatar 
-            user={user} 
-            onLogout={onLogout} 
-            onProfileClick={handleProfileClick}
-          />
+      <div className="header-content">
+        <div className="header-left">
+          <div className="logo-container" onClick={handleDashboardClick}>
+            <div className="logo-icon">🎓</div>
+            <h1 className="logo-text">Trajecta</h1>
+            <span className="logo-tagline">AI Learning Paths</span>
+          </div>
         </div>
-      )}
+        
+        {user && (
+          <div className="header-right">
+            <nav className="header-nav">
+              <button 
+                className="nav-button" 
+                onClick={handleDashboardClick}
+                title="Dashboard"
+              >
+                <span className="nav-icon">🏠</span>
+                <span className="nav-text">Dashboard</span>
+              </button>
+              <button 
+                className="nav-button" 
+                onClick={handleExamClick}
+                title="Course Finder"
+              >
+                <span className="nav-icon">🔍</span>
+                <span className="nav-text">Find Courses</span>
+              </button>
+            </nav>
+            <div className="header-avatar">
+              <UserAvatar 
+                user={user} 
+                onLogout={onLogout} 
+                onProfileClick={handleProfileClick}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   );
 };
