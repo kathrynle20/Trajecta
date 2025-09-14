@@ -2,27 +2,17 @@
 
 A Node.js Express web application with clear frontend/backend separation.
 
-## Project Structure
+## Website Preview
 
-```
-├── backend/                 # Backend server code
-│   ├── routes/             # Express route handlers
-│   ├── views/              # Jade/Pug templates
-│   └── app.js              # Express application setup
-├── frontend/               # Frontend source code
-│   ├── assets/             # Source assets
-│   │   ├── css/           # Stylesheets
-│   │   ├── js/            # JavaScript files
-│   │   └── images/        # Image assets
-│   └── templates/          # Template copies (for reference)
-├── public/                 # Built/served static assets
-│   ├── css/               # Compiled CSS
-│   ├── js/                # Compiled JavaScript
-│   └── images/            # Optimized images
-├── scripts/               # Build and utility scripts
-├── bin/                   # Executable scripts
-└── node_modules/          # Dependencies
-```
+### Feed page
+<img width="988" height="714" alt="Screenshot 2025-09-14 at 11 37 54 AM" src="https://github.com/user-attachments/assets/b08fcd10-9af5-4956-84e9-16eadf2f1431" />
+
+### Find Friends
+<img width="556" height="642" alt="Screenshot 2025-09-14 at 11 42 44 AM" src="https://github.com/user-attachments/assets/11fc1863-23d1-4698-a270-0eacdf3ee718" />
+
+### User Profile
+<img width="677" height="597" alt="Screenshot 2025-09-14 at 11 43 30 AM" src="https://github.com/user-attachments/assets/031464ff-c9fc-4a97-a337-45e9575ba0aa" />
+
 
 ## Development
 
