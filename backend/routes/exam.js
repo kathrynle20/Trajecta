@@ -35,7 +35,23 @@ router.post("/questions", async (req, res) => {
 // Compute verdict
 router.post("/verdict", async (req, res) => {
   const answers = req.body?.answers || {};
-  const { out, err } = await runPy({ mode: "verdict", answers });
+  const questions = req.body?.questions || [];
+  const userAnswers = req.body?.answers || {};
+  const advisorDescription = req.body?.advisor_description || "";
+  const conversationTranscript = req.body?.conversation_transcript || "";
+  const skillLevels = req.body?.skill_levels || [];
+  
+  const { out, err } = await runPy({ 
+    mode: "verdict", 
+    answers: {
+      ...answers,
+      questions: questions,
+      answers: userAnswers,
+      advisor_description: advisorDescription,
+      conversation_transcript: conversationTranscript,
+      skill_levels: skillLevels
+    }
+  });
   if (err) return res.json({ error: `Python error: ${err}` });
   try {
     const result = JSON.parse(out);

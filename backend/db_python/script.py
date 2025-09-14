@@ -91,17 +91,58 @@ Constraints:
 
 # ---------- VERDICT (fast heuristic; optional LLM polish) ----------
 CATALOG = [
+  # Math & Statistics
   {"id":"math_found","title":"Math Foundations (Algebra & Calc)","tags":["math"],"level":0},
   {"id":"lin_alg","title":"Linear Algebra Essentials","tags":["math"],"level":1},
+  {"id":"stats_intro","title":"Introduction to Statistics","tags":["stats","math"],"level":0},
+  
+  # Computer Science & Programming
   {"id":"python_intro","title":"Python Programming for Everyone","tags":["cs","web","data"],"level":0},
   {"id":"ds_algo","title":"Data Structures & Algorithms","tags":["cs","algorithms"],"level":1},
+  {"id":"web_fullstack","title":"Full-Stack Web Basics (HTML/CSS/JS)","tags":["web","cs","systems"],"level":0},
+  
+  # AI & Machine Learning
   {"id":"ml_intro","title":"Intro to Machine Learning","tags":["ml","ai","stats"],"level":1},
   {"id":"ml_projects","title":"ML Projects: From Notebook to App","tags":["ml","ai","data"],"level":2},
   {"id":"nlp_intro","title":"NLP Fundamentals","tags":["nlp","ai"],"level":1},
+  {"id":"deep_learning","title":"Deep Learning & Neural Networks","tags":["ml","ai","math"],"level":2},
+  
+  # Data Science & Analytics
   {"id":"data_analytics","title":"Practical Data Analytics with Python","tags":["data","stats"],"level":1},
-  {"id":"web_fullstack","title":"Full-Stack Web Basics (HTML/CSS/JS)","tags":["web","cs","systems"],"level":0},
-  {"id":"robotics_intro","title":"Robotics Basics","tags":["robotics","physics"],"level":1},
+  {"id":"big_data","title":"Big Data Processing & Analysis","tags":["data","systems"],"level":2},
+  
+  # Physics & Astronomy
+  {"id":"physics_intro","title":"Introduction to Physics","tags":["physics","math"],"level":0},
+  {"id":"astronomy_intro","title":"Introduction to Astronomy","tags":["astronomy","physics"],"level":0},
+  {"id":"astrophysics","title":"Astrophysics & Cosmology","tags":["astronomy","physics","math"],"level":2},
+  {"id":"observational_astro","title":"Observational Astronomy & Telescopes","tags":["astronomy","physics"],"level":1},
+  {"id":"planetary_science","title":"Planetary Science & Exploration","tags":["astronomy","physics"],"level":1},
+  {"id":"stellar_evolution","title":"Stellar Evolution & Stellar Physics","tags":["astronomy","physics","math"],"level":2},
+  
+  # Biology & Life Sciences
+  {"id":"bio_intro","title":"Introduction to Biology","tags":["biology"],"level":0},
+  {"id":"genetics","title":"Genetics & Molecular Biology","tags":["biology","data"],"level":1},
+  {"id":"bioinformatics","title":"Bioinformatics & Computational Biology","tags":["biology","cs","data"],"level":2},
+  
+  # Economics & Social Sciences
+  {"id":"econ_intro","title":"Introduction to Economics","tags":["economics","math"],"level":0},
   {"id":"econ_data","title":"Econometrics & Data","tags":["economics","stats","data"],"level":2},
+  {"id":"behavioral_econ","title":"Behavioral Economics","tags":["economics","psychology"],"level":1},
+  
+  # Robotics & Engineering
+  {"id":"robotics_intro","title":"Robotics Basics","tags":["robotics","physics"],"level":1},
+  {"id":"mechatronics","title":"Mechatronics & Control Systems","tags":["robotics","engineering"],"level":2},
+  {"id":"quantum_intro","title":"Introduction to Quantum Computing","tags":["quantum","physics","cs"],"level":2},
+  
+  # Humanities & Arts
+  {"id":"art_history","title":"Art History & Appreciation","tags":["art","history"],"level":0},
+  {"id":"digital_humanities","title":"Digital Humanities & Technology","tags":["art","history","cs"],"level":1},
+  {"id":"linguistics","title":"Introduction to Linguistics","tags":["languages","nlp"],"level":1},
+  
+  # Education & Design
+  {"id":"pedagogy","title":"Educational Psychology & Pedagogy","tags":["education","psychology"],"level":1},
+  {"id":"ux_design","title":"User Experience Design","tags":["design","web"],"level":1},
+  {"id":"instructional_design","title":"Instructional Design & Learning Technology","tags":["education","design"],"level":2},
 ]
 
 def _hours_score(s):
@@ -134,15 +175,24 @@ def _score(course, interests, levels, goal, hrs):
         lvl = levels["programming"]
     elif "data" in course["tags"] or "stats" in course["tags"]:
         lvl = 0.5*levels["math"] + 0.5*levels["study"]
+    elif "astronomy" in course["tags"] or "physics" in course["tags"]:
+        lvl = 0.7*levels["math"] + 0.3*levels["study"]
+    elif "biology" in course["tags"]:
+        lvl = 0.5*levels["study"] + 0.5*levels["programming"]
+    elif "art" in course["tags"] or "history" in course["tags"]:
+        lvl = levels["study"]
     else:
         lvl = 0.5*levels["programming"] + 0.5*levels["study"]
     score += 1.5 * (1.0 - min(1.5, abs(course["level"] - lvl))/1.5)
     if goal in ["build projects","career switch"] and course["id"] in ["ml_projects","web_fullstack","data_analytics"]:
         score += 1.0
-    if goal in ["get foundations","pass a class"] and course["id"] in ["math_found","python_intro","lin_alg","ds_algo"]:
+    if goal in ["get foundations","pass a class"] and course["id"] in ["math_found","python_intro","lin_alg","ds_algo","astronomy_intro","physics_intro"]:
         score += 1.0
-    if goal == "research prep" and course["id"] in ["nlp_intro","lin_alg","econ_data"]:
+    if goal == "research prep" and course["id"] in ["nlp_intro","lin_alg","econ_data","astrophysics","stellar_evolution"]:
         score += 0.7
+    # Boost astronomy courses if astronomy is in interests
+    if "astronomy" in interests and "astronomy" in course["tags"]:
+        score += 1.5
     score += 0.1 * _hours_score(hrs)
     return score
 
@@ -170,6 +220,24 @@ def make_verdict(payload: dict) -> dict:
     scored.sort(key=lambda x: x[0], reverse=True)
     picks = [c for _,c in scored[:5]]
 
+    # Generate personalized advisor pack based on user interests
+    advisor_seed = {
+        "topic": interests[0] if interests else "artificial intelligence",
+        "interests_hint": interests,
+        "goal": goal or "build expertise in the chosen field",
+        "role": "student",
+        "gaps": ["mathematics", "statistics"] if "math" not in interests else ["programming", "data analysis"],
+        "language": "English",
+        "levels": {
+            "Mathematics": "Advanced" if levels["math"] >= 3 else "Intermediate" if levels["math"] >= 2 else "Beginner",
+            "Programming": "Advanced" if levels["programming"] >= 3 else "Intermediate" if levels["programming"] >= 2 else "Beginner",
+            "Statistics": "Advanced" if levels["study"] >= 3 else "Intermediate" if levels["study"] >= 2 else "Beginner",
+            "Machine Learning": "Advanced" if "ml" in interests and levels["programming"] >= 2 else "Intermediate" if "ml" in interests else "Beginner"
+        }
+    }
+    
+    advisor_pack = generate_advisor_pack(advisor_seed)
+
     out = {
         "summary": {
             "primary_topics": interests[:3],
@@ -177,7 +245,12 @@ def make_verdict(payload: dict) -> dict:
             "study_time": hours,
             "goal": goal
         },
-        "recommendations": picks
+        "recommendations": picks,
+        "questions": payload.get("questions", []),
+        "answers": payload.get("answers", {}),
+        "advisor_description": advisor_pack.get("advisor_description", ""),
+        "conversation_transcript": advisor_pack.get("conversation_transcript", ""),
+        "skill_levels": advisor_pack.get("skill_levels", [])
     }
 
     # Optional short polish (kept tiny for latency)
@@ -210,10 +283,16 @@ TERMS2TOPICS = {
     "calculus":     [("math", 0.8)],
     "probability":  [("math", 0.7), ("stats", 0.6)],
 
-    # physics/space
-    "space":        [("physics", 0.7), ("math", 0.35), ("robotics", 0.3)],
-    "astronomy":    [("physics", 0.75), ("math", 0.35)],
-    "astrophysics": [("physics", 0.85), ("math", 0.4)],
+    # physics/space/astronomy
+    "space":        [("astronomy", 0.8), ("physics", 0.7), ("math", 0.35), ("robotics", 0.3)],
+    "astronomy":    [("astronomy", 1.0), ("physics", 0.75), ("math", 0.35)],
+    "astrophysics": [("astronomy", 0.9), ("physics", 0.85), ("math", 0.4)],
+    "cosmology":    [("astronomy", 0.9), ("physics", 0.8), ("math", 0.5)],
+    "planetary":    [("astronomy", 0.8), ("physics", 0.6)],
+    "stellar":      [("astronomy", 0.8), ("physics", 0.7), ("math", 0.4)],
+    "galaxy":       [("astronomy", 0.8), ("physics", 0.6)],
+    "telescope":    [("astronomy", 0.7), ("physics", 0.5)],
+    "observational":[("astronomy", 0.8), ("physics", 0.6)],
 
     # cs/web/systems
     "database":     [("data", 0.6), ("cs", 0.5)],
@@ -247,7 +326,8 @@ TOPIC_SYNONYMS = {
     "math": ["algebra","calculus","linear algebra","probability","statistics"],
     "stats":["statistics","regression","bayesian","inference"],
     "economics":["econometrics","microeconomics","macroeconomics","game theory"],
-    "physics":["space","astronomy","astrophysics","mechanics","quantum"],
+    "physics":["mechanics","thermodynamics","electromagnetism","quantum physics","classical physics"],
+    "astronomy":["space","cosmology","astrophysics","planetary science","stellar evolution","telescopes","observational astronomy","galaxies","stars","planets","solar system","universe"],
     "quantum":["quantum computing","qiskit","qubits"],
     "cs":["programming","software","computer science","git"],
     "web":["frontend","backend","full stack","api","react","html","css","javascript"],
@@ -389,14 +469,162 @@ def rank_query(payload: dict) -> dict:
 
 # ==== END: free-text relevance ranking ====
 
+# ---------- ADVISOR PACK (description, transcript, skill levels) ----------
+def generate_advisor_pack(seed: dict) -> dict:
+    """
+    Create:
+      - advisor_description: 3–6 sentence third-person summary
+      - conversation_transcript: short back-and-forth (Advisor/Student)
+      - skill_levels: array of [Name, Level] with Levels in {"Beginner","Intermediate","Advanced"}
 
-# ---------- main ----------
+    seed (optional) keys:
+      topic               (str)  e.g., "artificial intelligence"
+      interests_hint      (list[str] or str)
+      goal                (str)  e.g., "AI research", "ML engineering"
+      role                (str)  e.g., "software developer"
+      gaps                (list[str]) e.g., ["mathematics","statistics"]
+      language            (str)  default "English"
+      transcript_turns    (int)  default 3 (Advisor asks / Student answers)
+      levels              (dict) map like {"Mathematics":"Beginner","Programming":"Intermediate", ...}
+    """
+    language = (seed.get("language") or "English").strip()
+    topic = (seed.get("topic") or "artificial intelligence and machine learning").strip()
+
+    # Normalize interests -> list
+    interests = seed.get("interests_hint", [])
+    if isinstance(interests, str):
+        interests = [interests]
+    if not interests:
+        interests = ["ai", "machine learning", "deep learning"]
+
+    role = seed.get("role") or "software developer"
+    goal = seed.get("goal") or "transition into AI research or engineering roles"
+    gaps = seed.get("gaps") or ["mathematics", "statistics"]
+    transcript_turns = max(2, min(int(seed.get("transcript_turns", 3)), 5))
+
+    # Default skill levels or from seed.levels
+    levels = {
+        "Mathematics":  "Beginner",
+        "Programming":  "Intermediate",
+        "Statistics":   "Beginner",
+        "Machine Learning": "Beginner",
+    }
+    for k, v in (seed.get("levels") or {}).items():
+        if k in levels and v in {"Beginner","Intermediate","Advanced"}:
+            levels[k] = v
+
+    if USE_LLM:
+        try:
+            client = _anthropic_client()
+            prompt = {
+                "instructions": (
+                    "Return STRICT JSON with keys advisor_description, conversation_transcript, skill_levels. "
+                    "No prose around it; minified or compact JSON is fine."
+                ),
+                "constraints": {
+                    "language": language,
+                    "advisor_description": "3-6 sentences; third-person; concise; neutral; no bullet points.",
+                    "conversation_transcript": {
+                        "format": 'Multi-line string with alternating lines starting with "Advisor:" and "Student:".',
+                        "turns": transcript_turns
+                    },
+                    "skill_levels": {
+                        "items": [["Mathematics","{Beginner|Intermediate|Advanced}"],
+                                  ["Programming","{Beginner|Intermediate|Advanced}"],
+                                  ["Statistics","{Beginner|Intermediate|Advanced}"],
+                                  ["Machine Learning","{Beginner|Intermediate|Advanced}"]]
+                    }
+                },
+                "seed": {
+                    "topic": topic,
+                    "interests": interests,
+                    "current_role": role,
+                    "goal": goal,
+                    "gaps": gaps,
+                    "levels": levels
+                },
+                "style": {
+                    "tone": "supportive, academic, specific",
+                    "avoid": ["emojis","lists","markdown headings","overly long sentences"]
+                }
+            }
+            user_prompt = (
+                "Generate an advisor pack in the requested format using this input:\n" +
+                json.dumps(prompt, ensure_ascii=False)
+            )
+            # Reuse strict JSON helper
+            obj = _llm_json(client, MODEL_VERDICT, user_prompt, max_tokens=500)
+
+            # Light post-validate / coerce
+            adv = (obj.get("advisor_description") or "").strip()
+            convo = (obj.get("conversation_transcript") or "").strip()
+            skl = obj.get("skill_levels") or []
+            # Ensure skill levels structure
+            def _coerce_levels(x):
+                ok_levels = {"Beginner","Intermediate","Advanced"}
+                names = ["Mathematics","Programming","Statistics","Machine Learning"]
+                out = []
+                have = {k for k, _ in x if isinstance(k, str)}
+                for name in names:
+                    val = None
+                    for k, v in x:
+                        if k == name and isinstance(v, str) and v in ok_levels:
+                            val = v; break
+                    if not val:
+                        val = levels[name]
+                    out.append([name, val])
+                return out
+            skl = _coerce_levels(skl if isinstance(skl, list) else [])
+
+            return {
+                "advisor_description": adv,
+                "conversation_transcript": convo,
+                "skill_levels": skl
+            }
+        except Exception:
+            # Fall through to template
+            pass
+
+    # -------- Fallback (no LLM) --------
+    # Build a compact template that mirrors your requested format.
+    advisor_description = (
+        f"Student shows strong interest in {topic}. "
+        f"They want to build systems and understand key algorithms in {', '.join(interests[:2])}. "
+        f"Currently working as a {role} and aims to {goal}. "
+        f"Motivated but needs structured practice in {', '.join(gaps)} to progress."
+    )
+
+    qa = [
+        ("What specifically interests you about this field?",
+         f"I'm fascinated by {interests[0]} and want to build systems that can understand language and images."),
+        ("Do you have experience with mathematics and statistics?",
+         "I can code, but my math and stats are rusty."),
+        ("What's your ultimate career goal?",
+         f"I want to work at an AI company or do research in {interests[0]}."),
+    ]
+    qa = qa[:transcript_turns]
+
+    lines = []
+    for q, a in qa:
+        lines.append(f"Advisor: {q}")
+        lines.append(f"Student: {a}")
+        lines.append("")  # blank line between turns
+    conversation_transcript = "\n".join(lines).strip()
+
+    skill_levels = [[k, v] for k, v in levels.items()]
+
+    return {
+        "advisor_description": advisor_description,
+        "conversation_transcript": conversation_transcript,
+        "skill_levels": skill_levels
+    }
+
+# ---------- main (append a new mode) ----------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps({"error": "No input"})); sys.exit(1)
 
     raw = sys.argv[1]
-    # Backward compatibility: if plain "questions", generate generic set
     if raw.strip().lower() == "questions":
         try:
             out = generate_questions({"interests_hint":[]})
@@ -405,7 +633,6 @@ if __name__ == "__main__":
             print(json.dumps({"error": str(e)}))
         sys.exit(0)
 
-    # Otherwise expect a JSON with {"mode": "...", ...}
     try:
         payload = json.loads(raw)
     except Exception as e:
@@ -424,5 +651,29 @@ if __name__ == "__main__":
             print(json.dumps({"input":"verdict","output":out}, ensure_ascii=False))
         except Exception as e:
             print(json.dumps({"error": str(e)}))
+    elif mode in ("blurb","topic_paragraph"):
+        try:
+            topic = payload.get("topic") or payload.get("subject") or ""
+            language = payload.get("language", "English")
+            max_words = payload.get("max_words", 90)
+            paragraph = generate_topic_paragraph(topic, language, max_words)
+            out = {"topic": topic, "language": language, "paragraph": paragraph}
+            print(json.dumps({"input":"blurb","output":out}, ensure_ascii=False))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}))
+    elif mode in ("advisor_pack","advisor_profile"):
+        try:
+            out = generate_advisor_pack(payload.get("seed", {}))
+            # Print in the EXACT variable-style format if requested
+            if payload.get("format") == "variables":
+                print(
+                    "advisor_description = " + json.dumps(out["advisor_description"], ensure_ascii=False) + "\n" +
+                    "conversation_transcript = " + json.dumps(out["conversation_transcript"], ensure_ascii=False) + "\n" +
+                    "skill_levels = " + json.dumps(out["skill_levels"], ensure_ascii=False)
+                )
+            else:
+                print(json.dumps({"input":"advisor_pack","output":out}, ensure_ascii=False))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}))
     else:
-        print(json.dumps({"error":"Unknown mode; use 'questions' or 'verdict'."}))
+        print(json.dumps({"error":"Unknown mode; use 'questions', 'verdict', 'blurb', or 'advisor_pack'."}))
