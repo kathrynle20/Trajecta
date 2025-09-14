@@ -183,4 +183,35 @@ router.post('/find-posts', async (req, res) => {
   }
 });
 
+// POST endpoint to update post upvotes
+router.post('/update-upvotes', async (req, res) => {
+  try {
+    const { postId, increment } = req.body;
+    console.log('Updating upvotes for post:', postId, 'increment:', increment);
+
+    if (!postId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Post ID is required'
+      });
+    }
+
+    // Update post upvotes in database
+    const updatedPost = await userDb.updatePostUpvotes(postId, increment);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Post upvotes updated successfully',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Error updating post upvotes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update post upvotes',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

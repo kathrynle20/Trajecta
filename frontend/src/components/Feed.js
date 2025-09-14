@@ -168,7 +168,7 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
     }
   };
 
-  const handleLikePost = (postId) => {
+  const handleUpvotes = (postId) => {
     setPosts(posts.map(post => 
       post.id === postId 
         ? { 
@@ -265,6 +265,21 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
               
               <div className="post-content">
                 <p>{post.content}</p>
+              </div>
+              
+              <div className="post-actions">
+                <button 
+                  className={`action-btn like-btn ${post.isLiked ? 'liked' : ''}`}
+                  onClick={() => handleUpvotes(post.id)}
+                >
+                  ❤️ {post.likes}
+                </button>
+                <button 
+                  className="action-btn comment-btn"
+                  onClick={() => handleComment(post.id)}
+                >
+                  💬 {post.comments}
+                </button>
               </div>
             </div>
           ))

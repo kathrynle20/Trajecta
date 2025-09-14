@@ -107,13 +107,56 @@ const PostDetail = ({ postId, onBack, communityId }) => {
     }
   };
 
-  const handleLikePost = () => {
+  const handleLikePost = async () => {
     if (post) {
+      const wasLiked = post.isLiked;
+      const increment = !wasLiked;
+      
+      // Optimistically update UI
       setPost({
         ...post,
-        isLiked: !post.isLiked,
-        likes: post.isLiked ? post.likes - 1 : post.likes + 1
+        isLiked: !wasLiked,
+        likes: wasLiked ? post.likes - 1 : post.likes + 1
       });
+
+      try {
+        const response = await fetch('/api/feed/update-upvotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postId: post.id,
+            increment: increment
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (!data.success) {
+          // Revert optimistic update on failure
+          setPost({
+            ...post,
+            isLiked: wasLiked,
+            likes: wasLiked ? post.likes + 1 : post.likes - 1
+          });
+          console.error('Failed to update upvotes:', data.message);
+        } else {
+          // Update with actual database values
+          setPost(prevPost => ({
+            ...prevPost,
+            likes: data.post.upvotes
+          }));
+        }
+      } catch (error) {
+        // Revert optimistic update on error
+        setPost({
+          ...post,
+          isLiked: wasLiked,
+          likes: wasLiked ? post.likes + 1 : post.likes - 1
+        });
+        console.error('Error updating upvotes:', error);
+      }
     }
   };
 

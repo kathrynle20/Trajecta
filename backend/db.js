@@ -234,6 +234,30 @@ const userDb = {
       client.release();
     }
   },
+
+  // Update post upvotes
+  async updatePostUpvotes(postId, increment = true) {
+    const client = await pool.connect();
+    try {
+      console.log("Updating upvotes for post:", postId, "increment:", increment);
+      const updateResult = await client.query(
+        `UPDATE posts 
+         SET upvotes = upvotes + $2 
+         WHERE id = $1 
+         RETURNING *`,
+        [postId, increment ? 1 : -1]
+      );
+      
+      if (updateResult.rows.length === 0) {
+        throw new Error('Post not found');
+      }
+      
+      console.log("Updated post upvotes:", updateResult.rows[0]);
+      return updateResult.rows[0];
+    } finally {
+      client.release();
+    }
+  },
 };
 
 const userExperiencesDb = {
