@@ -68,81 +68,81 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
     ]
   };
 
-  useEffect(() => {
-    // Load posts for the current community
-    fetchPosts();
-    setLoading(true);
-    setTimeout(() => {
-      // setPosts(samplePosts[communityId] || []);
-      setLoading(false);
-    });
-  }, [communityId]);
+  // useEffect(() => {
+  //   // Load posts for the current community
+  //   fetchPosts();
+  //   setLoading(true);
+  //   setTimeout(() => {
+  //     // setPosts(samplePosts[communityId] || []);
+  //     setLoading(false);
+  //   });
+  // }, [communityId]);
 
-  const fetchPosts = () => {
-    try {
-      fetch('http://localhost:3001/feed-api/find-posts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ forum: communityId })
-        })
-        .then(res => res.json())
-        .then(response => {
-          console.log("FORUM ID:", communityId);
-          console.log(response);
-          if(response.success) {
-            const postsData = response.posts;
-            setPosts(postsData);
-          }
-        })
-        .catch(error => {
-          console.error('Error sending user data to backend:', error);
-        });
-    } catch (error) {
-        console.error('Error creating post for user:', error);
-    }
-  }
+  // const fetchPosts = () => {
+  //   try {
+  //     fetch('http://localhost:3001/feed-api/find-posts', {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //         body: JSON.stringify({ forum: communityId })
+  //       })
+  //       .then(res => res.json())
+  //       .then(response => {
+  //         console.log("FORUM ID:", communityId);
+  //         console.log(response);
+  //         if(response.success) {
+  //           const postsData = response.posts;
+  //           setPosts(postsData);
+  //         }
+  //       })
+  //       .catch(error => {
+  //         console.error('Error sending user data to backend:', error);
+  //       });
+  //   } catch (error) {
+  //       console.error('Error creating post for user:', error);
+  //   }
+  // }
 
-  const handleCreatePost = () => {
-    if (newPost.trim()) {
-      const post = {
-        id: Date.now(),
-        author: 'You',
-        avatar: '😊',
-        title: title,
-        content: newPost.trim(),
-        timestamp: 'Just now',
-        likes: 0,
-        comments: 0,
-        isLiked: false
-      };
+  // const handleCreatePost = () => {
+  //   if (newPost.trim()) {
+  //     const post = {
+  //       id: Date.now(),
+  //       author: 'You',
+  //       avatar: '😊',
+  //       title: title,
+  //       content: newPost.trim(),
+  //       timestamp: 'Just now',
+  //       likes: 0,
+  //       comments: 0,
+  //       isLiked: false
+  //     };
 
-      try {
-        fetch('http://localhost:3001/feed-api/create-post', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ user: user, forum: communityId, post: post })
-          })
-          .then(res => res.json())
-          .then(response => {
-            console.log(response);
-          })
-          .catch(error => {
-            console.error('Error sending user data to backend:', error);
-          });
-      } catch (error) {
-          console.error('Error creating post for user:', error);
-      }
+  //     try {
+  //       fetch('http://localhost:3001/feed-api/create-post', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           credentials: 'include',
+  //           body: JSON.stringify({ user: user, forum: communityId, post: post })
+  //         })
+  //         .then(res => res.json())
+  //         .then(response => {
+  //           console.log(response);
+  //         })
+  //         .catch(error => {
+  //           console.error('Error sending user data to backend:', error);
+  //         });
+  //     } catch (error) {
+  //         console.error('Error creating post for user:', error);
+  //     }
 
-      setNewPost('');
-      setShowCreatePost(false);
-    }
-  };
+  //     setNewPost('');
+  //     setShowCreatePost(false);
+  //   }
+  // };
 
   const handleLikePost = (postId) => {
     setPosts(posts.map(post => 
@@ -201,10 +201,10 @@ const Feed = ({ user, communityId, communityName, communityDescription, onPostSe
             onChange={(e) => setNewPost(e.target.value)}
             rows={3}
           />
-          <div className="form-actions">
+          {/* <div className="form-actions">
             <button onClick={handleCreatePost} className="post-btn">Post</button>
             <button onClick={() => setShowCreatePost(false)} className="cancel-btn">Cancel</button>
-          </div>
+          </div> */}
         </div>
       )}
 

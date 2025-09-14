@@ -18,48 +18,72 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
       setError(null);
 
       // Get communities for user
-      fetchCommunitiesForUser();
+      console.log("Fetching communities for user:", user);
+      
+      // Check if user has required properties
+      if (!user || !user.id) {
+        console.error('User object is missing or has no ID:', user);
+        setError('User information is missing');
+        setLoading(false);
+        return;
+      }
+      
+      await fetchCommunitiesForUser();
     
       setLoading(false);
     } catch (err) {
       console.error('Error fetching communities:', err);
+      setError('Failed to fetch communities');
       setLoading(false);
     }
   };
 
-  const fetchCommunitiesForUser = () => {
+  const fetchCommunitiesForUser = async () => {
     try {
-        fetch('http://localhost:3001/feed-api/find-communities', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ user: user })
-          })
-          .then(res => res.json())
-          .then(response => {
-            if(response.success) {
-                const communitiesData = response.communities;
-                setTabs(communitiesData);
-            }
-          })
-          .catch(error => {
-            console.error('Error sending user data to backend:', error);
-          });
+      console.log("Fetching communities for user in frontend:", user);
+      console.log("User ID being sent:", user?.id);
+      
+      const response = await fetch('http://localhost:3001/feed-api/find-communities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ user: user })
+      });
+      
+      const data = await response.json();
+      console.log("Communities response:", data);
+      
+      if (data.success && data.communities) {
+        console.log("Communities found:", data.communities);
+        const communitiesData = Array.isArray(data.communities) ? data.communities : [];
+        setTabs(communitiesData);
+        return communitiesData;
+      } else {
+        console.log("No communities found or error:", data.message);
+        setTabs([]);
+        return [];
+      }
     } catch (error) {
-        console.error('Error fetching communities for user:', error);
+      console.error('Error fetching communities for user:', error);
+      setError('Network error while fetching communities');
+      throw error;
     }
-  }
+  };
 
   // Load communities on component mount
   useEffect(() => {
-    fetchCommunities();
+    if (user && user.id) {
+      fetchCommunities();
+    } else {
+      console.log('User not ready yet, skipping community fetch:', user);
+    }
   }, [user]);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
-    const selectedTab = tabs.find(tab => tab.id === tabId);
+    const selectedTab = Array.isArray(tabs) ? tabs.find(tab => tab.id === tabId) : null;
     if (onCommunitySelect && selectedTab) {
       onCommunitySelect(tabId, selectedTab.name, selectedTab.description);
     }
@@ -89,7 +113,7 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
             console.error('Error sending user data to backend:', error);
           });
         
-        setTabs([...tabs, newTab]);
+        setTabs(prevTabs => [...(Array.isArray(prevTabs) ? prevTabs : []), newTab]);
         setNewTabName('');
         setNewTabDescription('');
         setShowAddForm(false);
@@ -100,7 +124,7 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
   };
 
   const getActiveTabContent = () => {
-    const currentTab = tabs.find(tab => tab.id === activeTab);
+    const currentTab = Array.isArray(tabs) ? tabs.find(tab => tab.id === activeTab) : null;
     return currentTab ? currentTab.name : 'Personal';
   };
 
@@ -118,22 +142,22 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div className="your-communities">
-        <div className="communities-header">
-          <h2>Your Communities</h2>
-        </div>
-        <div className="communities-error">
-          <p>{error}</p>
-          <button onClick={fetchCommunities} className="retry-btn">
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // // Error state
+  // if (error) {
+  //   return (
+  //     <div className="your-communities">
+  //       <div className="communities-header">
+  //         <h2>Your Communities</h2>
+  //       </div>
+  //       <div className="communities-error">
+  //         <p>{error}</p>
+  //         <button onClick={fetchCommunities} className="retry-btn">
+  //           Retry
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="your-communities">
@@ -143,7 +167,7 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
 
       <div className="tabs-container">
         <div className="tabs-list">
-          {tabs.map(tab => (
+          {Array.isArray(tabs) && tabs.map(tab => (
             <div
               key={tab.id}
               className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
@@ -155,6 +179,11 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
               </div>
             </div>
           ))}
+          {(!Array.isArray(tabs) || tabs.length === 0) && (
+            <div className="no-communities">
+              <p>No communities found. Create your first community!</p>
+            </div>
+          )}
         </div>
 
         <div className="create-community-section">
