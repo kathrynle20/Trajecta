@@ -160,7 +160,7 @@ const userDb = {
   async findCommunitiesForUser(profile) {
     // First try to find existing user by Google ID
     console.log("findCommunitiesForUser - user:", profile.id);
-    let user = await this.findById(profile.id);
+    let user = await this.findByGoogleId(profile.id);
     
     if (user) {
       const client = await pool.connect();

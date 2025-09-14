@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import Profile from './components/profile';
 import UserAvatar from './components/UserAvatar';
 import Homepage from './pages/Homepage';
+import Dashboard from './components/Dashboard';
 import './App.css';
 import Question from './components/Question';
 
@@ -116,7 +117,8 @@ function App() {
           <Routes>
             {user ? (
               <>
-                <Route path="/" element={<Homepage user={user} />} />
+                <Route path="/" element={<Dashboard user={user} />} />
+                <Route path="/home" element={<Homepage user={user} />} />
                 <Route path="/profile" element={<Profile user={user} />} />
                 <Route path="/exam" element={<Question />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

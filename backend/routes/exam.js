@@ -84,5 +84,36 @@ router.post("/rank", async (req, res) => {
   });
 });
 
+// People graph endpoint - get users with KNN relationships
+router.post("/people-graph", async (req, res) => {
+  const { currentUserId } = req.body; // Google ID of current user
+  
+  if (!currentUserId) {
+    return res.json({ error: "currentUserId is required" });
+  }
+  
+  const arg = { mode: "people_graph", current_user_id: currentUserId };
+  const { out, err } = await runPy(arg);
+  
+  // Check for real errors (not just INFO logs)
+  const isRealError = err && (
+    err.includes('Error:') || 
+    err.includes('Exception:') || 
+    err.includes('Traceback') ||
+    err.includes('ERROR:')
+  ) && !err.includes('INFO:') && !err.includes('DEBUG:');
+  
+  if (isRealError) return res.json({ error: `Python error: ${err}` });
+  
+  try {
+    const result = JSON.parse(out);
+    return res.json(result);
+  } catch (e) {
+    console.error('JSON parsing error:', e.message);
+    console.error('Raw output:', out);
+    return res.json({ error: `JSON parsing error: ${e.message}. Raw output: ${out.substring(0, 500)}...` });
+  }
+});
+
 
 module.exports = router;

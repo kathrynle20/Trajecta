@@ -10,7 +10,25 @@ try:
 except Exception:
     SKLEARN = False
 
-load_dotenv("../../frontend/.env")
+# Load environment variables - try multiple paths and encodings
+env_paths = [
+    '../../frontend/.env',
+    '../.env', 
+    '.env'
+]
+
+env_loaded = False
+for env_path in env_paths:
+    if env_loaded:
+        break
+    for encoding in ['utf-16', 'utf-8', 'latin-1']:
+        try:
+            load_dotenv(dotenv_path=env_path, encoding=encoding)
+            env_loaded = True
+            break
+        except (UnicodeDecodeError, FileNotFoundError):
+            continue
+
 CFG = dict(
     host=os.getenv("DB_HOST"),
     port=os.getenv("DB_PORT"),
@@ -89,6 +107,141 @@ def pretty_print_matches(target_user_id: str, k: int = 5):
     for uid, score in matches:
         email, name, interests = id2user[uid]
         print(f"  - {name or email:24s}  sim={score:.3f}  interests={interests}")
+
+def get_people_graph_data(current_user_google_id: str):
+    """
+    Get all users and their KNN relationships for the people graph.
+    Returns data suitable for D3.js visualization.
+    """
+    try:
+        # Import here to avoid circular imports
+        import psycopg
+        from urllib.parse import urlparse
+        import os
+        from dotenv import load_dotenv
+        
+        # Environment variables already loaded at module level
+        
+        # Database connection using individual environment variables (same as backend)
+        db_config = {
+            'host': os.getenv("DB_HOST"),
+            'port': os.getenv("DB_PORT"),
+            'user': os.getenv("DB_USER"),
+            'password': os.getenv("DB_PASSWORD"),
+            'dbname': os.getenv("DB_NAME"),
+            'sslmode': os.getenv("DB_SSLMODE", "require")
+        }
+        
+        # Check if we have the required config
+        missing_vars = [k for k, v in db_config.items() if not v and k != 'sslmode']
+        if missing_vars:
+            raise ValueError(f"Missing database environment variables: {missing_vars}")
+        
+        # Fetch all users from PostgreSQL
+        with psycopg.connect(**db_config) as conn:
+            with conn.cursor() as cur:
+                # Get all users with their basic info
+                cur.execute("""
+                    SELECT id, email, name, avatar_url, google_id, bio, created_at
+                    FROM users 
+                    ORDER BY created_at DESC
+                """)
+                users_data = cur.fetchall()
+                
+                # Get user experiences (interests) - assuming this table structure
+                cur.execute("""
+                    SELECT id, skill, years_of_experience
+                    FROM user_experiences
+                """)
+                experiences_data = cur.fetchall()
+        
+        # Process users data
+        vertices = []
+        user_lookup = {}
+        current_user_internal_id = None
+        
+        # Create a mapping of experiences by user ID
+        experiences_by_user = {}
+        for user_id, skill, years in experiences_data:
+            if user_id not in experiences_by_user:
+                experiences_by_user[user_id] = []
+            experiences_by_user[user_id].append({"skill": skill, "years": years})
+        
+        for user_id, email, name, avatar_url, google_id, bio, created_at in users_data:
+            user_interests = experiences_by_user.get(user_id, [])
+            interest_names = [exp["skill"] for exp in user_interests]
+            
+            # Check if this is the current user
+            is_current_user = google_id == current_user_google_id
+            if is_current_user:
+                current_user_internal_id = user_id
+            
+            user_node = {
+                "id": user_id,
+                "google_id": google_id,
+                "name": name or email,
+                "email": email,
+                "avatar_url": avatar_url,
+                "bio": bio,
+                "interests": interest_names,
+                "is_current_user": is_current_user,
+                "created_at": str(created_at) if created_at else None
+            }
+            
+            vertices.append(user_node)
+            user_lookup[user_id] = user_node
+        
+        # Calculate KNN relationships if we have a current user
+        edges = []
+        knn_similarities = []
+        
+        if current_user_internal_id and len(vertices) > 1:
+            try:
+                # Use the existing KNN function
+                matches = find_matches_by_interests(current_user_internal_id, k=min(5, len(vertices)-1))
+                
+                for match_user_id, similarity in matches:
+                    if match_user_id in user_lookup:
+                        # Create edge from current user to similar user
+                        edge = {
+                            "source": current_user_internal_id,
+                            "target": match_user_id,
+                            "similarity": similarity,
+                            "type": "similarity"
+                        }
+                        edges.append(edge)
+                        
+                        # Store for later ranking
+                        knn_similarities.append({
+                            "user_id": match_user_id,
+                            "user": user_lookup[match_user_id],
+                            "similarity": similarity
+                        })
+                        
+            except Exception as e:
+                print(f"Warning: Could not calculate KNN: {e}")
+        
+        # Sort by similarity for top-5 closest people
+        knn_similarities.sort(key=lambda x: x["similarity"], reverse=True)
+        top_5_closest = knn_similarities[:5]
+        
+        return {
+            "vertices": vertices,
+            "edges": edges,
+            "current_user_id": current_user_internal_id,
+            "current_user_google_id": current_user_google_id,
+            "top_5_closest": top_5_closest,
+            "total_users": len(vertices)
+        }
+        
+    except Exception as e:
+        return {
+            "error": f"Failed to get people graph data: {str(e)}",
+            "vertices": [],
+            "edges": [],
+            "current_user_id": None,
+            "top_5_closest": []
+        }
 
 if __name__ == "__main__":
     rows = fetch_users_min()

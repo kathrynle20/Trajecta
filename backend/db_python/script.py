@@ -9,8 +9,24 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 # Suppress course_recommender INFO logs
 logging.getLogger("course_recommender").setLevel(logging.WARNING)
 
-# Keep your encoding if you really stored .env as UTF-16, otherwise UTF-8 is safer
-load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-16')
+# Load environment variables - try multiple paths and encodings
+env_paths = [
+    '../../frontend/.env',
+    '../.env', 
+    '.env'
+]
+
+env_loaded = False
+for env_path in env_paths:
+    if env_loaded:
+        break
+    for encoding in ['utf-16', 'utf-8', 'latin-1']:
+        try:
+            load_dotenv(dotenv_path=env_path, encoding=encoding)
+            env_loaded = True
+            break
+        except (UnicodeDecodeError, FileNotFoundError):
+            continue
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 USE_LLM = bool(ANTHROPIC_API_KEY)
@@ -769,5 +785,13 @@ if __name__ == "__main__":
                 print(json.dumps({"input":"advisor_pack","output":out}, ensure_ascii=False))
         except Exception as e:
             print(json.dumps({"error": str(e)}))
+    elif mode == "people_graph":
+        try:
+            from read_db import get_people_graph_data
+            current_user_id = payload.get("current_user_id", "")
+            out = get_people_graph_data(current_user_id)
+            print(json.dumps({"input":"people_graph","output":out}, ensure_ascii=False))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}))
     else:
-        print(json.dumps({"error":"Unknown mode; use 'questions', 'verdict', 'blurb', or 'advisor_pack'."}))
+        print(json.dumps({"error":"Unknown mode; use 'questions', 'verdict', 'blurb', 'advisor_pack', or 'people_graph'."}))
