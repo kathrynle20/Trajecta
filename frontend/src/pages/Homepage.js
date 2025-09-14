@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import YourCommunities from '../components/YourCommunities';
 import Feed from '../components/Feed';
 import PostDetail from '../components/PostDetail';
 import './Homepage.css';
 
 const Homepage = ({user}) => {
+  const navigate = useNavigate();
+  
   // State management
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -90,6 +93,43 @@ const Homepage = ({user}) => {
             />
           </div>
         )}
+        
+        {/* User Matching Button - Fixed position in bottom left */}
+        <button
+          onClick={() => navigate('/matching')}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50px',
+            padding: '15px 20px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.3s ease',
+            transform: 'scale(1)'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = '#0056b3';
+            e.target.style.transform = 'scale(1.05)';
+            e.target.style.boxShadow = '0 6px 16px rgba(0, 123, 255, 0.4)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = '#007bff';
+            e.target.style.transform = 'scale(1)';
+            e.target.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
+          }}
+        >
+          🎯 Find Study Buddies
+        </button>
       </div>
     </div>
   );

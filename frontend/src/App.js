@@ -6,6 +6,7 @@ import UserAvatar from './components/UserAvatar';
 import Homepage from './pages/Homepage';
 import './App.css';
 import Question from './components/Question';
+import UserMatching from './components/UserMatching';
 
 // Header component that needs access to navigate
 const AppHeader = ({ user, onLogin, onLogout }) => {
@@ -86,6 +87,7 @@ function App() {
                 <Route path="/" element={<Homepage user={user} />} />
                 <Route path="/profile" element={<Profile user={user} />} />
                 <Route path="/exam" element={<Question />} />
+                <Route path="/matching" element={<UserMatching />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </>
             ) : (
