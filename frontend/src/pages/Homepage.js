@@ -73,6 +73,7 @@ const Homepage = ({user}) => {
             </div>
             <div className="main-feed">
               <Feed 
+                user={user}
                 communityId={selectedCommunityId} 
                 communityName={selectedCommunityName}
                 communityDescription={selectedCommunityDescription}
@@ -84,6 +85,7 @@ const Homepage = ({user}) => {
           <div className="post-detail-container">
             <PostDetail 
               postId={selectedPostId}
+              communityId={selectedCommunityId}
               onBack={handleBackToFeed}
             />
           </div>

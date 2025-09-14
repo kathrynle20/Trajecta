@@ -67,6 +67,25 @@
   border: 2px solid #e9ecef;
 }
 
+/* CSS for the title input */
+.create-post-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 20px;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.create-post-form input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .create-post-form textarea {
   width: 100%;
   padding: 0.75rem;

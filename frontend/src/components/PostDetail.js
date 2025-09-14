@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './PostDetail.css';
 
-const PostDetail = ({ postId, onBack }) => {
+const PostDetail = ({ postId, onBack, communityId }) => {
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');

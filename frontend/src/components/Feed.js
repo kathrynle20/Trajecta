@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Feed.css';
 
-const Feed = ({ communityId, communityName, communityDescription, onPostSelect }) => {
+const Feed = ({ user, communityId, communityName, communityDescription, onPostSelect }) => {
   const [posts, setPosts] = useState([]);
+  const [title, setTitle] = useState('');
   const [newPost, setNewPost] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -69,12 +70,40 @@ const Feed = ({ communityId, communityName, communityDescription, onPostSelect }
 
   useEffect(() => {
     // Load posts for the current community
+    fetchPosts();
     setLoading(true);
     setTimeout(() => {
-      setPosts(samplePosts[communityId] || []);
+      // setPosts(samplePosts[communityId] || []);
       setLoading(false);
     });
   }, [communityId]);
+
+  const fetchPosts = () => {
+    try {
+      fetch('http://localhost:3001/feed-api/find-posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ forum: communityId })
+        })
+        .then(res => res.json())
+        .then(response => {
+          console.log("FORUM ID:", communityId);
+          console.log(response);
+          if(response.success) {
+            const postsData = response.posts;
+            setPosts(postsData);
+          }
+        })
+        .catch(error => {
+          console.error('Error sending user data to backend:', error);
+        });
+    } catch (error) {
+        console.error('Error creating post for user:', error);
+    }
+  }
 
   const handleCreatePost = () => {
     if (newPost.trim()) {
@@ -82,13 +111,34 @@ const Feed = ({ communityId, communityName, communityDescription, onPostSelect }
         id: Date.now(),
         author: 'You',
         avatar: '😊',
+        title: title,
         content: newPost.trim(),
         timestamp: 'Just now',
         likes: 0,
         comments: 0,
         isLiked: false
       };
-      setPosts([post, ...posts]);
+
+      try {
+        fetch('http://localhost:3001/feed-api/create-post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ user: user, forum: communityId, post: post })
+          })
+          .then(res => res.json())
+          .then(response => {
+            console.log(response);
+          })
+          .catch(error => {
+            console.error('Error sending user data to backend:', error);
+          });
+      } catch (error) {
+          console.error('Error creating post for user:', error);
+      }
+
       setNewPost('');
       setShowCreatePost(false);
     }
@@ -139,6 +189,12 @@ const Feed = ({ communityId, communityName, communityDescription, onPostSelect }
 
       {showCreatePost && (
         <div className="create-post-form">
+          <input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
           <textarea
             placeholder={`What's on your mind in ${communityName}?`}
             value={newPost}

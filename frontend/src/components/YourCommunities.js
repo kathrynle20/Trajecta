@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import './YourCommunities.css';
 
 const YourCommunities = ({ onCommunitySelect, user }) => {
@@ -15,30 +16,41 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
     try {
       setLoading(true);
       setError(null);
+
+      // Get communities for user
+      fetchCommunitiesForUser();
     
-      // Fallback to mock data if API fails or for development
-      const communitiesData = [
-        { id: 1, name: 'Personal', description: 'Your personal space for thoughts and updates', isActive: true, memberCount: 1 },
-        { id: 2, name: 'Tech Talk', description: 'Discussions about technology, programming, and innovation', isActive: false, memberCount: 890 },
-        { id: 3, name: 'Study Groups', description: 'Collaborative learning and academic support', isActive: false, memberCount: 567 }
-      ];
-      
-      setTabs(communitiesData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching communities:', err);
-      
-      // Use mock data as fallback
-      const mockData = [
-        { id: 1, name: 'Personal', description: 'Your personal space for thoughts and updates', isActive: true, memberCount: 1 },
-        { id: 2, name: 'Tech Talk', description: 'Discussions about technology, programming, and innovation', isActive: false, memberCount: 890 },
-        { id: 3, name: 'Study Groups', description: 'Collaborative learning and academic support', isActive: false, memberCount: 567 }
-      ];
-      
-      setTabs(mockData);
       setLoading(false);
     }
   };
+
+  const fetchCommunitiesForUser = () => {
+    try {
+        fetch('http://localhost:3001/feed-api/find-communities', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ user: user })
+          })
+          .then(res => res.json())
+          .then(response => {
+            if(response.success) {
+                const communitiesData = response.communities;
+                setTabs(communitiesData);
+            }
+          })
+          .catch(error => {
+            console.error('Error sending user data to backend:', error);
+          });
+    } catch (error) {
+        console.error('Error fetching communities for user:', error);
+    }
+  }
 
   // Load communities on component mount
   useEffect(() => {
@@ -56,14 +68,26 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
   const addNewTab = async () => {
     if (newTabName.trim() && newTabDescription.trim()) {
       try {
-        // TODO: Replace with actual API call to create new community
         const newTab = {
-          id: Date.now(),
-          name: newTabName.trim(),
-          description: newTabDescription.trim(),
-          isActive: false,
-          memberCount: 1 // User joins as first member
-        };
+            id: uuidv4(),
+            name: newTabName.trim(),
+            description: newTabDescription.trim(),
+          };
+
+        fetch('http://localhost:3001/feed-api/create-community', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ user: user, forum: newTab })
+          })
+          .then(res => res.json())
+          .then(response => {
+          })
+          .catch(error => {
+            console.error('Error sending user data to backend:', error);
+          });
         
         setTabs([...tabs, newTab]);
         setNewTabName('');
@@ -127,7 +151,7 @@ const YourCommunities = ({ onCommunitySelect, user }) => {
             >
               <div className="tab-content">
                 <span className="tab-name">{tab.name}</span>
-                <span className="member-count">{tab.memberCount} members</span>
+                <span className="member-count">{tab.num_members} members</span>
               </div>
             </div>
           ))}
