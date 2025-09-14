@@ -13,15 +13,32 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 10;
+}
+
+.feed-header-content {
+  flex: 1;
 }
 
 .feed-header h3 {
   color: #333;
   font-size: 1.5rem;
   font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.community-description {
+  color: #666;
+  font-size: 0.9rem;
   margin: 0;
+  font-style: italic;
+  line-height: 1.4;
 }
 
 .create-post-btn {
@@ -48,6 +65,25 @@
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border: 2px solid #e9ecef;
+}
+
+/* CSS for the title input */
+.create-post-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 20px;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.create-post-form input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .create-post-form textarea {
@@ -188,6 +224,7 @@
   line-height: 1.6;
   margin: 0;
   font-size: 0.95rem;
+  text-align: left;
 }
 
 .post-actions {

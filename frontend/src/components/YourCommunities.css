@@ -297,6 +297,141 @@
   color: #666;
 }
 
+.communities-loading,
+.communities-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.communities-loading p {
+  font-style: italic;
+  margin: 0;
+}
+
+.communities-error p {
+  color: #dc3545;
+  margin: 0 0 1rem 0;
+}
+
+.retry-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #0056b3;
+}
+
+.create-community-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.create-community-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.create-community-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.create-community-form {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #e9ecef;
+}
+
+.community-name-input,
+.community-description-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.community-name-input:focus,
+.community-description-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.community-description-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.create-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  flex: 1;
+}
+
+.create-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.create-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  flex: 1;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .your-communities {

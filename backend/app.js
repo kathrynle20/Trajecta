@@ -11,6 +11,7 @@ require('dotenv').config({ path: '../frontend/.env' });
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
+var feedApiRouter = require('./routes/feed-api');
 var profileRouter = require('./routes/profile');
 
 // Import passport configuration
@@ -54,6 +55,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
+app.use('/feed-api', feedApiRouter);
 app.use('/profile', profileRouter);
 
 // catch 404 and forward to error handler

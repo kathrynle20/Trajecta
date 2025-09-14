@@ -8,6 +8,8 @@
     "install-frontend": "cd frontend && npm install",
     "dev": "cd frontend && npm start"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "debug": "^4.3.4",
+    "uuid": "^13.0.0"
+  }
 }

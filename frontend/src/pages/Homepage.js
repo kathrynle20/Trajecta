@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import YourCommunities from '../components/YourCommunities';
 import Feed from '../components/Feed';
+import PostDetail from '../components/PostDetail';
 import './Homepage.css';
 
 const Homepage = ({user}) => {
@@ -9,6 +10,9 @@ const Homepage = ({user}) => {
   const [data, setData] = useState(null);
   const [selectedCommunityId, setSelectedCommunityId] = useState(1);
   const [selectedCommunityName, setSelectedCommunityName] = useState('Personal');
+  const [selectedCommunityDescription, setSelectedCommunityDescription] = useState('Your personal space for thoughts and updates');
+  const [currentView, setCurrentView] = useState('feed'); // 'feed' or 'postDetail'
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
   // Effect hooks
   useEffect(() => {
@@ -27,9 +31,21 @@ const Homepage = ({user}) => {
   }, []);
 
   // Event handlers
-  const handleCommunitySelect = (communityId, communityName) => {
+  const handleCommunitySelect = (communityId, communityName, communityDescription) => {
     setSelectedCommunityId(communityId);
     setSelectedCommunityName(communityName);
+    setSelectedCommunityDescription(communityDescription || '');
+    setCurrentView('feed'); // Reset to feed view when switching communities
+  };
+
+  const handlePostSelect = (postId) => {
+    setSelectedPostId(postId);
+    setCurrentView('postDetail');
+  };
+
+  const handleBackToFeed = () => {
+    setCurrentView('feed');
+    setSelectedPostId(null);
   };
 
   // Render loading state
@@ -50,15 +66,30 @@ const Homepage = ({user}) => {
       </div>
 
       <div className="homepage-content">
-        <div className="communities-sidebar">
-          <YourCommunities onCommunitySelect={handleCommunitySelect} />
-        </div>
-        <div className="main-feed">
-          <Feed 
-            communityId={selectedCommunityId} 
-            communityName={selectedCommunityName} 
-          />
-        </div>
+        {currentView === 'feed' ? (
+          <>
+            <div className="communities-sidebar">
+              <YourCommunities onCommunitySelect={handleCommunitySelect} user={user} />
+            </div>
+            <div className="main-feed">
+              <Feed 
+                user={user}
+                communityId={selectedCommunityId} 
+                communityName={selectedCommunityName}
+                communityDescription={selectedCommunityDescription}
+                onPostSelect={handlePostSelect}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="post-detail-container">
+            <PostDetail 
+              postId={selectedPostId}
+              communityId={selectedCommunityId}
+              onBack={handleBackToFeed}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

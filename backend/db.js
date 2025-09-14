@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config({ path: '../frontend/.env' });
+const { v4: uuidv4 } = require('uuid');
 
 // Database configuration
 const pool = new Pool({
@@ -57,7 +58,7 @@ const userDb = {
           profile.emails[0].value,
           profile.displayName,
           profile.photos[0].value,
-          profile.google_id,
+          profile.id,
           `New user joined via Google OAuth`
         ]
       );
@@ -70,7 +71,7 @@ const userDb = {
   // Find or create user from Google profile
   async findOrCreateFromGoogleProfile(profile) {
     // First try to find existing user by Google ID
-    let user = await this.findByGoogleId(profile.google_id);
+    let user = await this.findByGoogleId(profile.id);
     
     if (user) {
       // Update user info in case it changed
@@ -78,14 +79,14 @@ const userDb = {
       try {
         const result = await client.query(
           `UPDATE users 
-           SET name = $1, avatar_url = $2, email = $3
+           SET email = $1, name = $2, avatar_url = $3, updated_at = NOW() 
            WHERE google_id = $4 
            RETURNING *`,
           [
-            profile.displayName,
-            profile.photos[0].value,
             profile.emails[0].value,
-            profile.google_id
+            profile.displayName, 
+            profile.photos[0].value,
+            profile.id
           ]
         );
         return result.rows[0];
@@ -96,7 +97,127 @@ const userDb = {
       // Create new user
       return await this.createFromGoogleProfile(profile);
     }
-  }
+  },
+
+  // Create community
+  async createCommunity(profile, forum) {
+    // Find or create user from Google profile
+    console.log("made it to backend");
+    let user = await this.findById(profile.id);
+    
+    if (user) {
+      const client = await pool.connect();
+      console.log("adding community:", forum);
+      try {
+        const forumResult = await client.query(
+          `INSERT INTO forums (name, description, created_by, created_at, num_members)
+          VALUES ($1, $2, $3, $4, $5) RETURNING *
+          `, 
+          [
+            forum.name,
+            forum.description,
+            user.id,
+            new Date(),
+            1
+          ]
+        );
+
+        const createdForum = forumResult.rows[0];
+        // console.log("Forum created with ID:", createdForum.id);
+
+        // const forum_members = await client.query(
+        //   `INSERT INTO forum_members (forum_id, user_id, role, joined_at)
+        //   VALUES ($1, $2, $3, $4)
+        //   `, 
+        //   [
+        //     createdForum.id,
+        //     user.id,
+        //     'owner',
+        //     new Date()
+        //   ]
+        // );
+        
+        // console.log("Forum member added successfully");
+        return createdForum;
+      } finally {
+        client.release();
+      }
+    } else {
+      throw new Error('User not found');
+    }
+  },
+
+  // Load communities for user
+  async findCommunitiesForUser(profile) {
+    // First try to find existing user by Google ID
+    console.log("findCommunitiesForUser - user:", profile.id);
+    let user = await this.findById(profile.id);
+    
+    if (user) {
+      const client = await pool.connect();
+      try {
+        const result = await client.query(
+          `SELECT * FROM forums
+          WHERE created_by = $1
+          `, 
+          [
+            user.id
+          ]
+        );
+        return result.rows;
+      } finally {
+        client.release();
+      }
+    }
+  },
+
+  // Create post for user
+  async createPost(profile, forum, post) {
+    // First try to find existing user by Google ID
+    let user = await this.findByGoogleId(profile.id);
+    
+    if (user) {
+      const client = await pool.connect();
+      try {
+        console.log("POST: ", post);
+        const postResult = await client.query(
+          `INSERT INTO posts (id, forum_id, user_id, title, content, is_public, upvotes, created_at)
+          VALUES ($1, $2, $3, $4, $5, true, 0, NOW())
+          `, 
+          [
+            uuidv4(),
+            forum,
+            user.id,
+            post.title,
+            post.content
+          ]
+        );
+        console.log(postResult);
+      } finally {
+        client.release();
+      }
+    }
+  },
+
+  // Load posts for community
+  async findPostsForCommunity(forum) {
+    const client = await pool.connect();
+    try {
+      const postResult = await client.query(
+        `SELECT id, forum_id, user_id, title, content, is_public, upvotes, created_at
+        FROM posts
+        WHERE forum_id = $1
+        ORDER BY created_at DESC
+        `, 
+        [
+          forum
+        ]
+      );
+      return postResult.rows;
+    } finally {
+      client.release();
+    }
+  },
 };
 
 const userExperiencesDb = {

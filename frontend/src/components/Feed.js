@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Feed.css';
 
-const Feed = ({ communityId, communityName }) => {
+const Feed = ({ user, communityId, communityName, communityDescription, onPostSelect }) => {
   const [posts, setPosts] = useState([]);
+  const [title, setTitle] = useState('');
   const [newPost, setNewPost] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,32 +68,81 @@ const Feed = ({ communityId, communityName }) => {
     ]
   };
 
-  useEffect(() => {
-    // Load posts for the current community
-    setLoading(true);
-    setTimeout(() => {
-      setPosts(samplePosts[communityId] || []);
-      setLoading(false);
-    });
-  }, [communityId]);
+  // useEffect(() => {
+  //   // Load posts for the current community
+  //   fetchPosts();
+  //   setLoading(true);
+  //   setTimeout(() => {
+  //     // setPosts(samplePosts[communityId] || []);
+  //     setLoading(false);
+  //   });
+  // }, [communityId]);
 
-  const handleCreatePost = () => {
-    if (newPost.trim()) {
-      const post = {
-        id: Date.now(),
-        author: 'You',
-        avatar: '😊',
-        content: newPost.trim(),
-        timestamp: 'Just now',
-        likes: 0,
-        comments: 0,
-        isLiked: false
-      };
-      setPosts([post, ...posts]);
-      setNewPost('');
-      setShowCreatePost(false);
-    }
-  };
+  // const fetchPosts = () => {
+  //   try {
+  //     fetch('http://localhost:3001/feed-api/find-posts', {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         credentials: 'include',
+  //         body: JSON.stringify({ forum: communityId })
+  //       })
+  //       .then(res => res.json())
+  //       .then(response => {
+  //         console.log("FORUM ID:", communityId);
+  //         console.log(response);
+  //         if(response.success) {
+  //           const postsData = response.posts;
+  //           setPosts(postsData);
+  //         }
+  //       })
+  //       .catch(error => {
+  //         console.error('Error sending user data to backend:', error);
+  //       });
+  //   } catch (error) {
+  //       console.error('Error creating post for user:', error);
+  //   }
+  // }
+
+  // const handleCreatePost = () => {
+  //   if (newPost.trim()) {
+  //     const post = {
+  //       id: Date.now(),
+  //       author: 'You',
+  //       avatar: '😊',
+  //       title: title,
+  //       content: newPost.trim(),
+  //       timestamp: 'Just now',
+  //       likes: 0,
+  //       comments: 0,
+  //       isLiked: false
+  //     };
+
+  //     try {
+  //       fetch('http://localhost:3001/feed-api/create-post', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           credentials: 'include',
+  //           body: JSON.stringify({ user: user, forum: communityId, post: post })
+  //         })
+  //         .then(res => res.json())
+  //         .then(response => {
+  //           console.log(response);
+  //         })
+  //         .catch(error => {
+  //           console.error('Error sending user data to backend:', error);
+  //         });
+  //     } catch (error) {
+  //         console.error('Error creating post for user:', error);
+  //     }
+
+  //     setNewPost('');
+  //     setShowCreatePost(false);
+  //   }
+  // };
 
   const handleLikePost = (postId) => {
     setPosts(posts.map(post => 
@@ -106,6 +156,12 @@ const Feed = ({ communityId, communityName }) => {
     ));
   };
 
+  const handleComment = (postId) => {
+    if (onPostSelect) {
+      onPostSelect(postId);
+    }
+  };
+
   if (loading) {
     return (
       <div className="feed-loading">
@@ -117,7 +173,12 @@ const Feed = ({ communityId, communityName }) => {
   return (
     <div className="feed">
       <div className="feed-header">
-        <h3>{communityName} Feed</h3>
+        <div className="feed-header-content">
+          <h3>{communityName} Feed</h3>
+          {communityDescription && (
+            <p className="community-description">{communityDescription}</p>
+          )}
+        </div>
         <button 
           className="create-post-btn"
           onClick={() => setShowCreatePost(!showCreatePost)}
@@ -128,16 +189,22 @@ const Feed = ({ communityId, communityName }) => {
 
       {showCreatePost && (
         <div className="create-post-form">
+          <input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
           <textarea
             placeholder={`What's on your mind in ${communityName}?`}
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
             rows={3}
           />
-          <div className="form-actions">
+          {/* <div className="form-actions">
             <button onClick={handleCreatePost} className="post-btn">Post</button>
             <button onClick={() => setShowCreatePost(false)} className="cancel-btn">Cancel</button>
-          </div>
+          </div> */}
         </div>
       )}
 
@@ -169,7 +236,10 @@ const Feed = ({ communityId, communityName }) => {
                 >
                   ❤️ {post.likes}
                 </button>
-                <button className="action-btn comment-btn">
+                <button 
+                  className="action-btn comment-btn"
+                  onClick={() => handleComment(post.id)}
+                >
                   💬 {post.comments}
                 </button>
                 <button className="action-btn share-btn">
