@@ -5,9 +5,12 @@ from typing import List, Dict, Any, Optional
 import time
 import logging
 
-# Set up logging
+# Set up logging and suppress HTTP request logs
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+# Suppress course_recommender INFO logs when used as a module
+logger.setLevel(logging.WARNING)
 
 
 class CourseRecommendationSystem:
@@ -370,31 +373,77 @@ RESPONSE FORMAT:
 
 
 def generate_course_roadmap(advisor_description: str, conversation_transcript: str,
-                            skill_levels: List[List[str]]) -> List:
+                            skill_levels: List[List[str]], client=None) -> tuple:
     """
     Main function to generate course roadmap from student profile.
 
     Args:
-        api_key: Your Claude API key
         advisor_description: Academic advisor's assessment of the student
         conversation_transcript: Q&A dialogue between advisor and student
         skill_levels: Array of [skill_name, skill_level] pairs
+        client: Optional Anthropic client (if None, will use hardcoded API key)
 
     Returns:
-        List in format: [[vertices], [edges]] where:
-        - vertices: List of [course_name, course_description] pairs
-        - edges: List of [prerequisite_course, dependent_course] pairs
+        tuple: (vertices, edges) where:
+        - vertices: List of course nodes with metadata
+        - edges: List of prerequisite relationships
 
     Example input format:
-        api_key = "sk-ant-api03-..."
         advisor_description = "Student interested in AI/ML, software developer background, wants to transition to AI research"
         conversation_transcript = "Advisor: What interests you? Student: Neural networks and deep learning..."
         skill_levels = [["Mathematics", "Beginner"], ["Programming", "Intermediate"], ["Statistics", "Beginner"]]
     """
     try:
-        api_key = "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"
-        # Initialize the recommendation system
-        recommender = CourseRecommendationSystem(api_key)
+        # Use provided client or fallback to hardcoded API key
+        if client is not None:
+            # Create a temporary CourseRecommendationSystem with the provided client
+            recommender = CourseRecommendationSystem.__new__(CourseRecommendationSystem)
+            recommender.client = client
+            recommender.model = "claude-3-haiku-20240307"
+            recommender.available_departments = {
+                "Aeronautics_and_Astronautics": 92,
+                "Anthropology": 67,
+                "Architecture": 116,
+                "Athletics,_Physical_Education_and_Recreation": 10,
+                "Biological_Engineering": 41,
+                "Biology": 85,
+                "Brain_and_Cognitive_Sciences": 99,
+                "Chemical_Engineering": 57,
+                "Chemistry": 43,
+                "Civil_and_Environmental_Engineering": 105,
+                "Comparative_Media_Studies_Writing": 71,
+                "Concourse": 5,
+                "Earth,_Atmospheric,_and_Planetary_Sciences": 111,
+                "Economics": 85,
+                "Edgerton_Center": 28,
+                "Electrical_Engineering_and_Computer_Science": 298,
+                "Engineering_Systems_Division": 66,
+                "Experimental_Study_Group": 30,
+                "Global_Studies_and_Languages": 121,
+                "Health_Sciences_and_Technology": 72,
+                "History": 91,
+                "Institute_for_Data,_Systems,_and_Society": 20,
+                "Linguistics_and_Philosophy": 85,
+                "Literature": 128,
+                "Materials_Science_and_Engineering": 92,
+                "Mathematics": 213,
+                "Mechanical_Engineering": 162,
+                "Media_Arts_and_Sciences": 47,
+                "Music_and_Theater_Arts": 69,
+                "Nuclear_Science_and_Engineering": 53,
+                "Others": 67,
+                "Physics": 163,
+                "Political_Science": 71,
+                "Science,_Technology,_and_Society": 36,
+                "Sloan_School_of_Management": 123,
+                "Special_Programs": 26,
+                "Urban_Studies_and_Planning": 113,
+                "Women's_and_Gender_Studies": 21,
+            }
+        else:
+            # Fallback to original behavior
+            api_key = "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"
+            recommender = CourseRecommendationSystem(api_key)
 
         # Step 1: Select departments
         departments = recommender.select_departments(advisor_description, conversation_transcript, skill_levels)
@@ -420,12 +469,17 @@ def generate_course_roadmap(advisor_description: str, conversation_transcript: s
         }
         graph = recommender.create_learning_roadmap(courses, student_profile)
 
-        logger.info(f"Successfully generated roadmap with {len(graph[0])} courses and {len(graph[1])} dependencies")
-        return graph
+        # Convert the graph format to match script.py expectations
+        # graph is [vertices, edges] - convert to tuple (vertices, edges)
+        vertices = graph[0] if len(graph) > 0 else []
+        edges = graph[1] if len(graph) > 1 else []
+        
+        logger.info(f"Successfully generated roadmap with {len(vertices)} courses and {len(edges)} dependencies")
+        return (vertices, edges)
 
     except Exception as e:
         logger.error(f"Error generating course roadmap: {str(e)}")
-        return [[], []]
+        return ([], [])
 
 
 

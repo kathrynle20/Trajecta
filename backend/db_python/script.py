@@ -1,7 +1,13 @@
 # script.py  — dynamic AI questions + verdict
 # pip install "psycopg[binary]" python-dotenv anthropic
-import os, sys, json, hashlib
+import os, sys, json, hashlib, logging
 from dotenv import load_dotenv
+from course_recommender import generate_course_roadmap
+
+# Suppress HTTP request logging from httpx (used by Anthropic client)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+# Suppress course_recommender INFO logs
+logging.getLogger("course_recommender").setLevel(logging.WARNING)
 
 # Keep your encoding if you really stored .env as UTF-16, otherwise UTF-8 is safer
 load_dotenv(dotenv_path='../../frontend/.env', encoding='utf-16')
@@ -244,6 +250,15 @@ def make_verdict(payload: dict) -> dict:
     }
     
     advisor_pack = generate_advisor_pack(advisor_seed)
+    
+    # Generate course roadmap using the same client
+    client = _anthropic_client() if USE_LLM else None
+    vertices, edges = generate_course_roadmap(
+        advisor_pack.get("advisor_description", ""),
+        advisor_pack.get("conversation_transcript", ""),
+        advisor_pack.get("skill_levels", []),
+        client=client
+    )
 
     out = {
         "summary": {
@@ -257,7 +272,9 @@ def make_verdict(payload: dict) -> dict:
         "answers": payload.get("answers", {}),
         "advisor_description": advisor_pack.get("advisor_description", ""),
         "conversation_transcript": advisor_pack.get("conversation_transcript", ""),
-        "skill_levels": advisor_pack.get("skill_levels", [])
+        "skill_levels": advisor_pack.get("skill_levels", []),
+        "roadmap_vertices": vertices,
+        "roadmap_edges": edges
     }
 
     # Optional short polish (kept tiny for latency)
@@ -687,6 +704,8 @@ Language: {language}
     conversation_transcript = "\n".join(lines).strip()
 
     skill_levels = [[k, v] for k, v in topic_levels.items()]
+    
+    graph = generate_course_roadmap(advisor_description, conversation_transcript, skill_levels)
 
     return {
         "advisor_description": advisor_description,

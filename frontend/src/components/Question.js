@@ -436,6 +436,67 @@ const Question = () => {
               )}
             </div>
           )}
+
+          {/* Display Course Roadmap */}
+          {(verdict.roadmap_vertices || verdict.roadmap_edges) && (
+            <div style={{ marginTop: 24, padding: 16, backgroundColor: '#f0f8ff', borderRadius: 8, border: '1px solid #b0e0e6' }}>
+              <h3 style={{ marginTop: 0, marginBottom: 16, color: '#1e3a8a' }}>Course Roadmap</h3>
+              
+              {verdict.roadmap_vertices && (
+                <div style={{ marginBottom: 20 }}>
+                  <h4 style={{ margin: '0 0 12px 0', color: '#1d4ed8' }}>Vertices (Courses):</h4>
+                  <div style={{ 
+                    padding: 12, 
+                    backgroundColor: 'white', 
+                    borderRadius: 6, 
+                    border: '1px solid #93c5fd',
+                    fontFamily: 'monospace',
+                    fontSize: '0.9em',
+                    lineHeight: '1.4',
+                    whiteSpace: 'pre-wrap',
+                    overflow: 'auto',
+                    maxHeight: '300px'
+                  }}>
+                    {JSON.stringify(verdict.roadmap_vertices, null, 2)}
+                  </div>
+                </div>
+              )}
+
+              {verdict.roadmap_edges && (
+                <div style={{ marginBottom: 16 }}>
+                  <h4 style={{ margin: '0 0 12px 0', color: '#1d4ed8' }}>Edges (Prerequisites):</h4>
+                  <div style={{ 
+                    padding: 12, 
+                    backgroundColor: 'white', 
+                    borderRadius: 6, 
+                    border: '1px solid #93c5fd',
+                    fontFamily: 'monospace',
+                    fontSize: '0.9em',
+                    lineHeight: '1.4',
+                    whiteSpace: 'pre-wrap',
+                    overflow: 'auto',
+                    maxHeight: '200px'
+                  }}>
+                    {JSON.stringify(verdict.roadmap_edges, null, 2)}
+                  </div>
+                </div>
+              )}
+
+              {/* Print statements as requested */}
+              <div style={{ marginTop: 20, padding: 12, backgroundColor: '#fef3c7', borderRadius: 6, border: '1px solid #f59e0b' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: '#92400e', fontSize: '0.9em' }}>Debug Output:</h4>
+                <div style={{ 
+                  fontFamily: 'monospace',
+                  fontSize: '0.8em',
+                  color: '#451a03',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {verdict.roadmap_vertices && `print(vertices)\n${JSON.stringify(verdict.roadmap_vertices, null, 2)}\n\n`}
+                  {verdict.roadmap_edges && `print(edges)\n${JSON.stringify(verdict.roadmap_edges, null, 2)}`}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
