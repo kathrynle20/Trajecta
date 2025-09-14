@@ -13,6 +13,7 @@ var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
 var feedApiRouter = require('./routes/feed-api');
 var profileRouter = require('./routes/profile');
+var feedApiRouter = require('./routes/feed-api');
 
 // Import passport configuration
 require('./config/passport');
@@ -57,6 +58,7 @@ app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/feed-api', feedApiRouter);
 app.use('/profile', profileRouter);
+app.use('/feed-api', feedApiRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
