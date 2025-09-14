@@ -12,6 +12,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var authRouter = require('./routes/auth');
 var feedApiRouter = require('./routes/feed-api');
+var profileRouter = require('./routes/profile');
 
 var profileRouter = require('./routes/profile');
 
