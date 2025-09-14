@@ -128,22 +128,25 @@ router.get('/interests/:userId', requireAuth, async (req, res) => {
 });
 
 // Get user experiences
-router.get('/experiences/:userId', requireAuth, async (req, res) => {
+router.get('/experiences/:userId', async (req, res) => {
   const { userId } = req.params;
   
   const client = await pool.connect();
   try {
     const result = await client.query(
-      'SELECT id, skill, years_of_experience FROM user_experiences WHERE id = $1 ORDER BY skill',
+      'SELECT * FROM user_experiences WHERE id = $1 ORDER BY skill',
       [userId]
     );
 
-    const experiences = result.rows.map(row => ({
-      id: row.id,
-      skill: row.skill,
-      years: row.years_of_experience
+    const skills = result.rows[0].skill;
+    const years_of_experience = result.rows[0].years_of_experience;
+    const experiences = skills.map((skill, i) => ({
+      id: userId,
+      skill: skill,
+      years_of_experience: years_of_experience[i]
     }));
 
+    console.log("backend experiences:", experiences);
     res.json({ experiences });
 
   } catch (error) {

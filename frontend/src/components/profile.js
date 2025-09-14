@@ -7,35 +7,39 @@ const Profile = ({ user }) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // // Load experiences from backend on component mount
-  // useEffect(() => {
-  //   const fetchExperiences = async () => {
-  //     try {
-  //       const response = await fetch(`http://localhost:3001/profile/experiences/${user.id}`, {
-  //         credentials: 'include'
-  //       });
-  //       if (response.ok) {
-  //         const data = await response.json();
-  //         // Convert from backend format (skill, years) to frontend format (topic, years)
-  //         const formattedExperiences = data.experiences.map(exp => ({
-  //           id: exp.id,
-  //           skill: exp.skill,
-  //           years_of_experience: exp.years_of_experience
-  //         }));
-  //         setUserExperiences(formattedExperiences);
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching experiences:', error);
-  //       // Fallback to localStorage if backend fails
-  //       const savedExperiences = localStorage.getItem(`experiences_${user.id}`);
-  //       if (savedExperiences) {
-  //         setUserExperiences(JSON.parse(savedExperiences));
-  //       }
-  //     }
-  //   };
+  // Load experiences from backend on component mount
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/profile/experiences/${user.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          console.log("data:", data);
+          // Keep consistent format: skill and years_of_experience
+          const formattedExperiences = data.experiences.map(exp => ({
+            skill: exp.skill,
+            years_of_experience: exp.years_of_experience
+          }));
+          setUserExperiences(formattedExperiences);
+        }
+      } catch (error) {
+        console.error('Error fetching experiences:', error);
+        // Fallback to localStorage if backend fails
+        const savedExperiences = localStorage.getItem(`experiences_${user.id}`);
+        if (savedExperiences) {
+          setUserExperiences(JSON.parse(savedExperiences));
+        }
+      }
+    };
 
-  //   fetchExperiences();
-  // }, [user.id]);
+    fetchExperiences();
+  }, [user.id]);
 
   // Handle experiences changes (mark as unsaved)
   const handleExperiencesChange = (newExperiences) => {
@@ -52,8 +56,8 @@ const Profile = ({ user }) => {
       console.log("user experiences:", userExperiences);
       const formattedExperiences = userExperiences.map(exp => ({
         id: user.id,
-        skill: exp.topic,
-        years_of_experience: exp.years
+        skill: exp.skill,
+        years_of_experience: exp.years_of_experience
       }));
       console.log("formatted experiences:", formattedExperiences);
 
