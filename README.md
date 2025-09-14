@@ -5,10 +5,10 @@ A Node.js Express web application with clear frontend/backend separation.
 
 ## Website Preview
 
-### AI-Generated Course Roadmap
+### Personalized Questionnaire
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7288b72e-d395-444e-a83b-44c804a8980b" />
 
-### Personalized Questionnaire
+### AI-Generated Course Roadmap
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/86b7688e-958e-41e8-9606-4dfaf8f5f868" />
 
 ### Feed page
