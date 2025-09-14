@@ -1,6 +1,6 @@
 import React from "react";
-import "./profile.css";
-import Profile from "../components/profile";
+import "./Profile.css";
+import Profile from "../components/Profile";
 
 const ProfilePage = (props) => {
     return (
